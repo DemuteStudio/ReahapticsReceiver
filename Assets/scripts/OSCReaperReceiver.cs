@@ -97,7 +97,7 @@ public class OSCReaperReceiver : MonoBehaviour
         
         if (Mathf.Abs(_currentAmplitude - _targetAmplitude) < 0.01f)
         {
-            _currentAmplitude = Mathf.Lerp(_currentAmplitude, _targetAmplitude, 0.05f);
+            _currentAmplitude = _targetAmplitude;
             HapticController.clipLevel = _currentAmplitude;
         }
         else
@@ -107,7 +107,7 @@ public class OSCReaperReceiver : MonoBehaviour
         }
         if (Mathf.Abs(_currentFrequency - _targetFrequency) < 0.01f)
         {
-            _currentFrequency = Mathf.Lerp(_currentFrequency, _targetFrequency, 0.05f);
+            _currentFrequency = _targetAmplitude;
             HapticController.clipFrequencyShift = _currentFrequency;
         }
         else
