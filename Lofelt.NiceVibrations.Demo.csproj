@@ -53,8 +53,8 @@
     <Compile Include="Assets\Feel\NiceVibrations\Demo\_Common\Scripts\DemoManager.cs" />
     <Compile Include="Assets\Feel\NiceVibrations\Demo\DemoAssets\WobbleDemo\Scripts\WobbleButton.cs" />
     <Compile Include="Assets\Feel\NiceVibrations\Demo\DemoAssets\ContinuousDemo\Scripts\ContinuousHapticsDemoManager.cs" />
-    <Compile Include="Assets\Feel\NiceVibrations\Demo\DemoAssets\RegularPresetsDemo\RegularPresetsDemoManager.cs" />
     <Compile Include="Assets\Feel\NiceVibrations\Demo\_Common\Scripts\UI\MMSpriteReplace.cs" />
+    <Compile Include="Assets\Feel\NiceVibrations\Demo\DemoAssets\RegularPresetsDemo\RegularPresetsDemoManager.cs" />
     <Compile Include="Assets\Feel\NiceVibrations\Demo\DemoAssets\BallDemo\Scripts\BallDemoManager.cs" />
     <Compile Include="Assets\Feel\NiceVibrations\Demo\_Common\Scripts\UI\MMProgressBar.cs" />
     <Compile Include="Assets\Feel\NiceVibrations\Demo\_Common\Scripts\UI\MMSignal.cs" />

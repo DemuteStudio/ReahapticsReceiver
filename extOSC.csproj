@@ -126,8 +126,8 @@
     <Compile Include="Assets\extOSC\Scripts\Components\Informers\OSCTransmitterInformerVector2.cs" />
     <Compile Include="Assets\extOSC\Scripts\Core\Network\OSCTransmitterBackend.cs" />
     <Compile Include="Assets\extOSC\Scripts\Core\Network\OSCReceiverWindowsStoreBackend.cs" />
-    <Compile Include="Assets\extOSC\Scripts\Attributes\OSCHostAttribute.cs" />
     <Compile Include="Assets\extOSC\Scripts\Core\Events\OSCEventMidi.cs" />
+    <Compile Include="Assets\extOSC\Scripts\Attributes\OSCHostAttribute.cs" />
     <Compile Include="Assets\extOSC\Scripts\Core\Packers\OSCPackerDouble.cs" />
     <Compile Include="Assets\extOSC\Scripts\Core\Network\OSCTransmitterStandaloneBackend.cs" />
     <Compile Include="Assets\extOSC\Scripts\Components\Informers\OSCTransmitterInformerChar.cs" />

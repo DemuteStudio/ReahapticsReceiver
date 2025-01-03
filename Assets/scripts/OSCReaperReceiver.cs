@@ -15,6 +15,11 @@ public class OSCReaperReceiver : MonoBehaviour
     private TextMeshProUGUI transientValueText;
     [SerializeField]
     private TextMeshProUGUI activeValueText;
+    [SerializeField]
+    private TextMeshProUGUI SendsPerSecondText;
+    
+    [SerializeField]
+    private TextMeshProUGUI HighestAmplitudeValueText;
     
     public string[] addresses = { "/track/2/pan", "/track/3/pan", "/track/4/pan" };
     public int port = 9000; // Match this to the port Reaper sends to
@@ -27,11 +32,16 @@ public class OSCReaperReceiver : MonoBehaviour
     float _currentFrequency = 0;
     float _targetAmplitude = 0;
     float _targetFrequency = 0;
+
+    private int SendsRecievedPerSecond = 0;
+    private float timer = 0;
     
     bool hapticsSupported = DeviceCapabilities.isVersionSupported;
     bool amplitudeModulationSupported = DeviceCapabilities.hasAmplitudeModulation;
     bool frequencyModulationSupported = DeviceCapabilities.hasFrequencyModulation;
     
+    float DebugHigheAmpValue = 0;
+    float DebugHigheFreqValue = 0;
     void Start()
     {
         
@@ -88,6 +98,13 @@ public class OSCReaperReceiver : MonoBehaviour
     }
     void Update()
     {
+        timer += Time.deltaTime;
+        if (timer > 1)
+        {
+            SendsPerSecondText.text = SendsRecievedPerSecond.ToString();
+            SendsRecievedPerSecond = 0;
+            timer = 0;
+        }
         activeValueText.text = HapticController.IsPlaying().ToString();
         
         if (_targetAmplitude < 0.01f) _targetAmplitude = 0;
@@ -107,7 +124,7 @@ public class OSCReaperReceiver : MonoBehaviour
         }
         if (Mathf.Abs(_currentFrequency - _targetFrequency) < 0.01f)
         {
-            _currentFrequency = _targetAmplitude;
+            _currentFrequency = _targetFrequency;
             HapticController.clipFrequencyShift = _currentFrequency;
         }
         else
@@ -118,25 +135,38 @@ public class OSCReaperReceiver : MonoBehaviour
         amplitudeValueText.text = _currentAmplitude.ToString();
         frequencyValueText.text = _currentFrequency.ToString();
     }
+
+    void resetHighestValue()
+    {
+        DebugHigheAmpValue = 0;
+        HighestAmplitudeValueText.text = DebugHigheAmpValue.ToString();
+    }
     private void ReceivedMessage(OSCMessage message, string address)
     {
         if (message.ToFloat(out float value))
         {
-            float v = 1-value;
+            float v = value;
             switch (address)
             {
-                case "/track/2/pan":
+                case "/amplitude/pan":
+                    SendsRecievedPerSecond++;
+                    if (_targetAmplitude < v)
+                    {
+                        DebugHigheAmpValue = v;
+                        Invoke(nameof(resetHighestValue),2);
+                        HighestAmplitudeValueText.text = DebugHigheAmpValue.ToString();
+                    }
                     _targetAmplitude = v;
                     HapticController.clipLevel = v;
                     // Do something with the value
-                    Debug.Log($"Received value {v} for Amplitude");
+                    //Debug.Log($"Received value {v} for Amplitude");
                     break;
-                case "/track/3/pan":
+                case "/frequency/pan":
                     _targetFrequency = v;
                     HapticController.clipFrequencyShift = v;
-                    Debug.Log($"Received value {v} for Frequency");
+                    //Debug.Log($"Received value {v} for Frequency");
                     break;
-                case "/track/4/pan":
+                case "/emphasis/pan":
                     if (v > 0)
                     {
                         transientValueText.text = v.ToString();
@@ -144,7 +174,6 @@ public class OSCReaperReceiver : MonoBehaviour
                         Invoke(nameof(ContinueHaptic),0.02f);
                         Debug.Log($"Received value {v} for Emphasis");
                     }
-                    
                     break;
                 default:
                     Debug.LogWarning($"Unknown address {address}");
