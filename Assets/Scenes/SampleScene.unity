@@ -1166,7 +1166,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &633941691
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1437,7 +1437,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d07387f64f0418e47b1b517e6502404c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Text: {fileID: 1359798438}
+  text: {fileID: 1359798438}
   address: /HapticJson
   port: 7401
   playHapticButton: {fileID: 7156960}

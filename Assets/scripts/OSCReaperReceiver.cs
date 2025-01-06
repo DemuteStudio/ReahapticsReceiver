@@ -170,6 +170,7 @@ public class OSCReaperReceiver : MonoBehaviour
                     if (v > 0)
                     {
                         transientValueText.text = v.ToString();
+                        HapticController.Stop();
                         HapticPatterns.PlayEmphasis(v, 1.0f);
                         Invoke(nameof(ContinueHaptic),0.02f);
                         Debug.Log($"Received value {v} for Emphasis");

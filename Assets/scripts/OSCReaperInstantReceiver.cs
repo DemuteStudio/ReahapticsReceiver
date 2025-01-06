@@ -6,25 +6,26 @@ using Lofelt.NiceVibrations;
 using TMPro;
 using UnityEngine.UI;
 using System.Text;
+using UnityEngine.Serialization;
 
 public class OSCReaperInstantReceiver : MonoBehaviour
 {
-    [SerializeField]
-    private TextMeshProUGUI Text;
+    [FormerlySerializedAs("Text")] [SerializeField]
+    private TextMeshProUGUI text;
 
     public string address = "/HapticJson";
     public int port = 7401; // Match this to the port Reaper sends to
 
     private OSCReceiver _receiver;
     
-    private HapticClip hapticMaterial;
+    private HapticClip _hapticMaterial;
     
     public Button playHapticButton;
     
     void Start()
     {
         playHapticButton.onClick.AddListener(PlayHaptic);
-        hapticMaterial = ScriptableObject.CreateInstance<HapticClip>();
+        _hapticMaterial = ScriptableObject.CreateInstance<HapticClip>();
         
         if (DeviceCapabilities.meetsAdvancedRequirements == true)
         {
@@ -46,16 +47,16 @@ public class OSCReaperInstantReceiver : MonoBehaviour
 
     private void PlayHaptic()
     {
-        HapticController.Play(hapticMaterial);
+        HapticController.Play(_hapticMaterial);
     }
 
     private void ReceivedMessage(OSCMessage message)
     {
-        //Debug.Log(message.Values[0].StringValue);
-        Text.text = message.Values[0].StringValue;
-        hapticMaterial.name = "ReaperHaptic";
-        hapticMaterial.json = Encoding.UTF8.GetBytes(message.Values[0].StringValue);
+        Debug.Log(message.Values[0].StringValue);
+        text.text = message.Values[0].StringValue;
+        _hapticMaterial.name = "ReaperHaptic";
+        _hapticMaterial.json = Encoding.UTF8.GetBytes(message.Values[0].StringValue);
         
-        HapticController.Play(hapticMaterial);
+        HapticController.Play(_hapticMaterial);
     }
 }
