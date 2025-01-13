@@ -128,14 +128,24 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
     {
         if (!_isListeneing && message.Address == instantHapticAddress)
         {
-            var parsedJson = ConvertToJson(message.Values[0].StringValue);
+            string input = message.Values[0].StringValue;
+            int newlineIndex = input.IndexOf('\n');
+            
+            string firstPart = input.Substring(0, newlineIndex);
+            string secondPart = input.Substring(newlineIndex + 1);
+            
+            // Extract the float value
+            string namePart = firstPart.Replace("name: ", "").Trim();
+            Debug.Log(namePart);
+            
+            var parsedJson = ConvertToJson(secondPart);
 
-            Debug.Log(parsedJson);
-            _hapticData = message.Values[0].StringValue;
+            Debug.Log(namePart);
+            Debug.Log(secondPart);
         
-            _instantHapticMaterial.name = "ReaperHaptic";
+            _instantHapticMaterial.name = namePart;
             _instantHapticMaterial.json = Encoding.UTF8.GetBytes(parsedJson);
-            hapticNameText.text = "ReaperHaptic";
+            hapticNameText.text = namePart;
         }
         
         if (_isListeneing == false) return;
@@ -154,7 +164,7 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
             _timeToPlayHaptic = sendTime;
             _toPlayHaptic = true;
             var parsedJson = ConvertToJson(secondPart);
-
+            Debug.Log(parsedJson);
             //Debug.Log(parsedJson);
             _hapticData = parsedJson;
 
