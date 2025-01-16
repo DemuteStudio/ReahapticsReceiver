@@ -74,18 +74,20 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
     {
         if (_isListeneing == false)
         {
+            playHapticButton.gameObject.SetActive(false);
+            loadHapticButton.gameObject.SetActive(false);
+
             _isListeneing = true;
             connectedLight.SetActive(true);
-            playHapticButton.enabled = false;
-            loadHapticButton.enabled = false;
             HapticController.Stop();
         }
         else
         {
+            playHapticButton.gameObject.SetActive(true);
+            loadHapticButton.gameObject.SetActive(true);
+
             _isListeneing = false;
             connectedLight.SetActive(false);
-            playHapticButton.enabled = true;
-            loadHapticButton.enabled = true;
             HapticController.Stop();
         }
     }
