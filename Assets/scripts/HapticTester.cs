@@ -8,7 +8,6 @@ using System.IO;
 using TMPro;
 using Lofelt.NiceVibrations;
 using System.Text;
-using UnityEngine.Serialization;
 
 [System.Serializable]
 public class HapticPreviewData
@@ -34,10 +33,9 @@ public class HapticTester : MonoBehaviour
 {
     [Header("Reaper view")]
     public Button importViewButton;
-    public TMP_Dropdown hapticDropdown;
-    public VideoPlayer videoPlayer;
-    public Button loadButton;
-
+    public Button settingsButton;
+    public Button closeSettingsButton;
+    
     [Header("import view")]
     public Button reaperViewButton;
     public Button deleteButton;
@@ -48,15 +46,21 @@ public class HapticTester : MonoBehaviour
     public Button saveButton;
     public Button closeVideoButton;
     public TMP_InputField triggerTimeInput;
+    public TMP_Dropdown hapticDropdown;
+    public VideoPlayer videoPlayer;
+    public Button loadButton;
     
     [Header("general")]
     public GameObject ReaperView;
     public GameObject ImportView;
+    public GameObject SettingsView;
     public GameObject screen;
     public TMP_Text videoFilePathText; // UI text to display the imported video file path
     public TMP_Text hapticFilePathText;
 
     HapticPreviewData currentHapticData;
+    
+    public HapticClip TesthapticMaterial;
     
     private float hapticTriggerTime;
     private bool hapticTriggered = false;
@@ -73,6 +77,7 @@ public class HapticTester : MonoBehaviour
     private string hapticDataFilePath;
     private void Start()
     {
+        print("Is gampad connected: " + GamepadRumbler.IsConnected());
         currentHapticData = new HapticPreviewData();
         hapticMaterial = ScriptableObject.CreateInstance<HapticClip>();
         hapticDataFilePath = Path.Combine(Application.persistentDataPath, "hapticData.json");
@@ -83,6 +88,8 @@ public class HapticTester : MonoBehaviour
         
         importViewButton.onClick.AddListener(OpenImportScreen);
         reaperViewButton.onClick.AddListener(OpenReaperView);
+        settingsButton.onClick.AddListener(OpenSettingsView);
+        closeSettingsButton.onClick.AddListener(CloseSettingsView);
         closeVideoButton.onClick.AddListener(CloseVideoScreen);
         
         saveButton.onClick.AddListener(SaveHaptic);
@@ -172,12 +179,30 @@ public class HapticTester : MonoBehaviour
         hasHapticDataSaved = false;
         ReaperView.SetActive(false);
         ImportView.SetActive(true);
+        print("Is gampad connected: " + GamepadRumbler.IsConnected());
+        HapticController.Play(TesthapticMaterial);
     }
 
     private void OpenReaperView()
     {
         ImportView.SetActive(false);
         ReaperView.SetActive(true);
+        print("Is gampad connected: " + GamepadRumbler.IsConnected());
+        HapticController.Play(TesthapticMaterial);
+    }
+    
+    private void CloseSettingsView()
+    {
+        ImportView.SetActive(false);
+        SettingsView.SetActive(false);
+        ReaperView.SetActive(true);
+    }
+    
+    private void OpenSettingsView()
+    {
+        ReaperView.SetActive(false);
+        ImportView.SetActive(false);
+        SettingsView.SetActive(true);
     }
     
     private void SaveHaptic()

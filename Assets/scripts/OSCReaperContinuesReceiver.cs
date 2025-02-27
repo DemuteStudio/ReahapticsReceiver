@@ -1,22 +1,29 @@
 using System;
 using System.Collections;
+using System.Net;
+using System.Net.Sockets;
 using System.Collections.Generic;
+using System.Net.NetworkInformation;
 using UnityEngine;
 using extOSC; // Use the library of your choice
 using Lofelt.NiceVibrations;
 using TMPro;
 using UnityEngine.UI;
 using System.Text;
+using Interhaptics;
 using UnityEngine.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using UnityEngine.Serialization;
+using Interhaptics.Internal;
+using Interhaptics.Utils;
 
 public class OSCReaperContinuesReceiver : MonoBehaviour
 {
     [FormerlySerializedAs("Text")] [SerializeField]
     private TextMeshProUGUI text;
 
-    
+    [Header("OSC variables")]
     public string hapticAddress = "/HapticJson";
     public string instantHapticAddress = "/InstantHapticJson";
     public string timeAddress = "/CursorPos";
@@ -36,17 +43,50 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
     private bool _toPlayHaptic = false;
     private float _timeToPlayHaptic = 0;
     private bool _isListeneing = false;
-    
+    [Header("UI elements")]
     public Button playHapticButton;
     public Button toggleConnectButton;
     public Button loadHapticButton;
     public GameObject connectedLight;
+    public GameObject connectedLightGreen;
     public TextMeshProUGUI hapticNameText;
-    
+    public TextMeshProUGUI IPText;
+    public TMP_InputField PortInput;
+    public GameObject WarningPanel;
+    public Button WarningPanelButton;
+    [Header("interhaptics")]
+    public EventHapticSource eventHapticSource;
+    public static string GetLocalIPAddress()
+    {
+        string localIP = "No network found";
+
+        try
+        {
+            foreach (IPAddress ip in Dns.GetHostAddresses(Dns.GetHostName()))
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork) // IPv4 only
+                {
+                    localIP = ip.ToString();
+                    break; // Take the first valid IP
+                }
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("Error getting IP: " + e.Message);
+        }
+
+        return localIP;
+    }
     void Start()
     {
+        IPText.text = GetLocalIPAddress();
+        Debug.Log($"IP:  {GetLocalIPAddress()}");
+        
         toggleConnectButton.onClick.AddListener(ToggleListening);
         playHapticButton.onClick.AddListener(PlayInstandHaptic);
+        WarningPanelButton.onClick.AddListener(CloseWarningPanel);
+        PortInput.onEndEdit.AddListener(OnPortIntputChanged);
         
         _hapticMaterial = ScriptableObject.CreateInstance<HapticClip>();
         _instantHapticMaterial = ScriptableObject.CreateInstance<HapticClip>();
@@ -57,11 +97,12 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
         else
         {
             Debug.Log("Haptics not supported");
+            WarningPanel.SetActive(true);
         }
         
         _receiver = gameObject.AddComponent<OSCReceiver>();
         _receiver.LocalPort = port;
-
+        PortInput.text = port.ToString();
         // Bind handler for received messages
         _receiver.Bind(startStopAddress, message => ReceivedMessage(message));
         _receiver.Bind(hapticAddress, message => ReceivedMessage(message));
@@ -70,6 +111,18 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
         Debug.Log($"Listening for OSC messages on port {port}");
     }
 
+    private void CloseWarningPanel()
+    {
+        WarningPanel.SetActive(false);
+    }
+    private void OnPortIntputChanged(string value)
+    {
+        if (int.TryParse(value, out int port))
+        {
+            _receiver.LocalPort = port;
+            Debug.Log($"Port changed to {port}");
+        }
+    }
     void ToggleListening()
     {
         if (_isListeneing == false)
@@ -112,13 +165,16 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
     private void PlayHaptic()
     {
         Debug.Log("play haptic at: " + _timePos);
+        HapticController.fallbackPreset = HapticPatterns.PresetType.Success;
         HapticController.Play(_hapticMaterial);
+        eventHapticSource.Play();
     }
     
     private void PlayInstandHaptic()
     {
         Debug.Log("play haptic at: " + _timePos);
         HapticController.Play(_instantHapticMaterial);
+        eventHapticSource.Play();
     }
     
     private void StopHaptic()
@@ -141,10 +197,12 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
             Debug.Log(namePart);
             
             var parsedJson = ConvertToJson(secondPart);
-
             Debug.Log(namePart);
             Debug.Log(secondPart);
-        
+            
+            HapticMaterial hm = HapticMaterial.CreateInstanceFromString("InstantHaptic");
+            eventHapticSource.hapticMaterial = hm;
+            
             _instantHapticMaterial.name = namePart;
             _instantHapticMaterial.json = Encoding.UTF8.GetBytes(parsedJson);
             hapticNameText.text = namePart;
@@ -185,6 +243,7 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
             {
                 _isCursorMoving = true;
                 Debug.Log(s);
+                connectedLightGreen.SetActive(true);
             }
             else if (s == "stopped")
             {
@@ -192,6 +251,7 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
                 _isCursorMoving = false;
                 StopHaptic();
                 Debug.Log(s);
+                connectedLightGreen.SetActive(false);
             }
             else if (s == "moved")
             {
@@ -216,9 +276,9 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
             version = new { major = 1, minor = 0, patch = 0 },
             metadata = new
             {
-                editor = "Meta Haptics Studio",
-                source = "..\\..\\ReaperSessions\\QuickMatch\\RenderedFiles\\sfx_quickMatch_victory.wav",
-                project = "hap_quickMatch_victory",
+                editor = "ReaHaptic",
+                source = "",
+                project = "",
                 tags = new List<string>(),
                 description = ""
             },
@@ -237,6 +297,44 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
 
         return JsonConvert.SerializeObject(output, Formatting.Indented);
     }
+    
+    public static string ConvertToIHJson(string input)
+    {
+        // Parse the input string into a JObject
+        JObject inputObject = JObject.Parse(input);
+
+        // Extract amplitude and frequency arrays
+        JArray amplitudeArray = (JArray)inputObject["amplitude"];
+        JArray frequencyArray = (JArray)inputObject["frequency"];
+
+        // Create the target JSON structure
+        var output = new
+        {
+            version = new { major = 1, minor = 0, patch = 0 },
+            metadata = new
+            {
+                editor = "ReaHaptic",
+                source = "",
+                project = "",
+                tags = new List<string>(),
+                description = ""
+            },
+            signals = new
+            {
+                continuous = new
+                {
+                    envelopes = new
+                    {
+                        amplitude = ProcessAmplitude(amplitudeArray),
+                        frequency = ProcessFrequency(frequencyArray)
+                    }
+                }
+            }
+        };
+
+        return JsonConvert.SerializeObject(output, Formatting.Indented);
+    }
+    
     private static List<object> ProcessAmplitude(JArray amplitudeArray)
     {
         var processedAmplitude = new List<object>();
