@@ -18,6 +18,100 @@ using UnityEngine.Serialization;
 using Interhaptics.Internal;
 using Interhaptics.Utils;
 
+
+[Serializable]
+public class InputAmplitude
+{
+    public float time;
+    public float amplitude;
+    public InputEmphasis emphasis;
+}
+
+[Serializable]
+public class InputFrequency
+{
+    public float time;
+    public float frequency;
+}
+
+[Serializable]
+public class InputEmphasis
+{
+    public float amplitude;
+    public float frequency;
+}
+
+[Serializable]
+public class Input
+{
+    public List<InputAmplitude> amplitude;
+    public List<InputFrequency> frequency;
+}
+
+[Serializable]
+public class HapsFormatNote
+{
+    public float m_startingPoint;
+    public float m_length = 0.022f;
+    public int m_priority = 0;
+    public float m_gain;
+    public HapsFormatHapticEffect m_hapticEffect = new HapsFormatHapticEffect();
+}
+
+[Serializable]
+public class HapsFormatHapticEffect
+{
+    public int m_type = 0;
+    public HapsFormatModulation m_amplitudeModulation;
+    public HapsFormatModulation m_frequencyModulation;
+}
+
+[Serializable]
+public class HapsFormatModulation
+{
+    public int m_extrapolationStrategy = 0;
+    public List<HapsFormatKeyframe> m_keyframes = new List<HapsFormatKeyframe>();
+}
+
+[Serializable]
+public class HapsFormatKeyframe
+{
+    public float m_time;
+    public float m_value;
+}
+
+[Serializable]
+public class HapsFormatMelody
+{
+    public int m_mute = 0;
+    public float m_gain = 1.0f;
+    public List<HapsFormatNote> m_notes = new List<HapsFormatNote>();
+}
+
+[Serializable]
+public class HapsFormatVibration
+{
+    public int m_loop = 0;
+    public float m_maximum = 1.0f;
+    public float m_gain = 1.0f;
+    public int m_signalEvaluationMethod = 3;
+    public List<HapsFormatMelody> m_melodies = new List<HapsFormatMelody>();
+}
+
+[Serializable]
+public class HapsFormat
+{
+    public string m_version = "5";
+    public string m_description = "";
+    public int m_HDFlag = 0;
+    public int m_time_unit = 0;
+    public int m_length_unit = 7;
+    public HapsFormatVibration m_vibration = new HapsFormatVibration();
+    public HapsFormatVibration m_stiffness = new HapsFormatVibration();
+    public HapsFormatVibration m_texture = new HapsFormatVibration();
+    public float m_gain = 1.0f;
+}
+
 public class OSCReaperContinuesReceiver : MonoBehaviour
 {
     [FormerlySerializedAs("Text")] [SerializeField]
@@ -56,6 +150,8 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
     public Button WarningPanelButton;
     [Header("interhaptics")]
     public EventHapticSource eventHapticSource;
+
+    private bool useNiceVibrations = false;
     public static string GetLocalIPAddress()
     {
         string localIP = "No network found";
@@ -111,6 +207,12 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
         Debug.Log($"Listening for OSC messages on port {port}");
     }
 
+    public void SetHapticsMethod(int val)
+    {
+        if (val == 1) useNiceVibrations = true;
+        else useNiceVibrations = false;
+    }
+
     private void CloseWarningPanel()
     {
         WarningPanel.SetActive(false);
@@ -164,17 +266,35 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
 
     private void PlayHaptic()
     {
-        Debug.Log("play haptic at: " + _timePos);
-        HapticController.fallbackPreset = HapticPatterns.PresetType.Success;
-        HapticController.Play(_hapticMaterial);
-        eventHapticSource.Play();
+        if (useNiceVibrations)
+        {
+            Debug.Log("play haptic with NiceVibrations at: " + _timePos);
+            HapticController.fallbackPreset = HapticPatterns.PresetType.Success;
+            HapticController.Play(_hapticMaterial);
+        }
+        else
+        {
+            Debug.Log("play haptic with InterHaptics at: " + _timePos);
+            eventHapticSource.Play();
+            print(eventHapticSource.hapticMaterial.text);
+        }
     }
     
     private void PlayInstandHaptic()
     {
-        Debug.Log("play haptic at: " + _timePos);
-        HapticController.Play(_instantHapticMaterial);
-        eventHapticSource.Play();
+        
+        if (useNiceVibrations)
+        {
+            Debug.Log("play haptic with NiceVibrations at: " + _timePos);
+            HapticController.fallbackPreset = HapticPatterns.PresetType.Success;
+            HapticController.Play(_instantHapticMaterial);
+        }
+        else
+        {
+            Debug.Log("play haptic with InterHaptics at: " + _timePos);
+            eventHapticSource.Play();
+            print(eventHapticSource.hapticMaterial.text);
+        }
     }
     
     private void StopHaptic()
@@ -196,11 +316,12 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
             string namePart = firstPart.Replace("name: ", "").Trim();
             Debug.Log(namePart);
             
-            var parsedJson = ConvertToJson(secondPart);
+            var parsedJson = ConvertToJsonNiceVibrations(secondPart);
+            var parsedJsonInteHaptics = ConvertToJsonInterHaptics(secondPart);
             Debug.Log(namePart);
             Debug.Log(secondPart);
             
-            HapticMaterial hm = HapticMaterial.CreateInstanceFromString("InstantHaptic");
+            HapticMaterial hm = HapticMaterial.CreateInstanceFromString(parsedJsonInteHaptics);
             eventHapticSource.hapticMaterial = hm;
             
             _instantHapticMaterial.name = namePart;
@@ -223,7 +344,7 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
             float.TryParse(floatPart, out float sendTime);
             _timeToPlayHaptic = sendTime;
             _toPlayHaptic = true;
-            var parsedJson = ConvertToJson(secondPart);
+            var parsedJson = ConvertToJsonNiceVibrations(secondPart);
             Debug.Log(parsedJson);
             //Debug.Log(parsedJson);
             _hapticData = parsedJson;
@@ -261,7 +382,7 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
             }
         }
     }
-    public static string ConvertToJson(string input)
+    public static string ConvertToJsonNiceVibrations(string input)
     {
         // Parse the input string into a JObject
         JObject inputObject = JObject.Parse(input);
@@ -297,44 +418,58 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
 
         return JsonConvert.SerializeObject(output, Formatting.Indented);
     }
-    
-    public static string ConvertToIHJson(string input)
+
+    public static string ConvertToJsonInterHaptics(string jsonInput)
     {
-        // Parse the input string into a JObject
-        JObject inputObject = JObject.Parse(input);
+        Input input = JsonUtility.FromJson<Input>(jsonInput);
+        HapsFormat output = new HapsFormat();
 
-        // Extract amplitude and frequency arrays
-        JArray amplitudeArray = (JArray)inputObject["amplitude"];
-        JArray frequencyArray = (JArray)inputObject["frequency"];
+        HapsFormatMelody emphasisMelody = new HapsFormatMelody();
+        HapsFormatMelody mainMelody = new HapsFormatMelody();
 
-        // Create the target JSON structure
-        var output = new
+        foreach (var amp in input.amplitude)
         {
-            version = new { major = 1, minor = 0, patch = 0 },
-            metadata = new
+            if (amp.emphasis.amplitude != 0 || amp.emphasis.frequency != 0)
             {
-                editor = "ReaHaptic",
-                source = "",
-                project = "",
-                tags = new List<string>(),
-                description = ""
-            },
-            signals = new
-            {
-                continuous = new
+                emphasisMelody.m_notes.Add(new HapsFormatNote
                 {
-                    envelopes = new
-                    {
-                        amplitude = ProcessAmplitude(amplitudeArray),
-                        frequency = ProcessFrequency(frequencyArray)
-                    }
-                }
+                    m_startingPoint = (float)Math.Round(amp.time, 3),
+                    m_gain = (float)Math.Round(amp.emphasis.amplitude,3)
+                });
             }
+        }
+
+        HapsFormatHapticEffect hapticEffect = new HapsFormatHapticEffect
+        {
+            m_amplitudeModulation = new HapsFormatModulation(),
+            m_frequencyModulation = new HapsFormatModulation()
         };
 
-        return JsonConvert.SerializeObject(output, Formatting.Indented);
+        foreach (var amp in input.amplitude)
+        {
+            hapticEffect.m_amplitudeModulation.m_keyframes.Add(new HapsFormatKeyframe { m_time = amp.time, m_value = amp.amplitude });
+        }
+
+        foreach (var freq in input.frequency)
+        {
+            hapticEffect.m_frequencyModulation.m_keyframes.Add(new HapsFormatKeyframe { m_time = freq.time, m_value = freq.frequency * 700f + 60f });
+        }
+
+        mainMelody.m_notes.Add(new HapsFormatNote
+        {
+            m_startingPoint = 0.0f,
+            m_length = 1.0f,
+            m_priority = 1,
+            m_gain = 1.0f,
+            m_hapticEffect = hapticEffect
+        });
+
+        output.m_vibration.m_melodies.Add(emphasisMelody);
+        output.m_vibration.m_melodies.Add(mainMelody);
+
+        return JsonUtility.ToJson(output, true);
     }
-    
+
     private static List<object> ProcessAmplitude(JArray amplitudeArray)
     {
         var processedAmplitude = new List<object>();

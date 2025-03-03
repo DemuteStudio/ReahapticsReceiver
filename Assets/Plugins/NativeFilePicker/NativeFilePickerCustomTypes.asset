@@ -14,8 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   customTypes:
   - identifier: .haptic
-    description: haptic file
+    description: haptic file type for nice vibrations
     isExported: 0
     conformsTo: []
     extensions:
     - haptic
+  - identifier: .haps
+    description: haptic file type for Interhaptics
+    isExported: 0
+    conformsTo: []
+    extensions:
+    - haps
