@@ -150,8 +150,9 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
     public Button WarningPanelButton;
     [Header("interhaptics")]
     public EventHapticSource eventHapticSource;
-
-    private bool useNiceVibrations = false;
+    public EventHapticSource instanteventHapticSource;
+    
+    private bool useNiceVibrations = true;
     public static string GetLocalIPAddress()
     {
         string localIP = "No network found";
@@ -209,8 +210,16 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
 
     public void SetHapticsMethod(int val)
     {
-        if (val == 1) useNiceVibrations = true;
-        else useNiceVibrations = false;
+        if (val == 0)
+        {
+            useNiceVibrations = true;
+            Debug.Log($"Use Nice Virations");
+        }
+        else
+        {
+            useNiceVibrations = false;
+            Debug.Log($"Use InterHaptics");
+        }
     }
 
     private void CloseWarningPanel()
@@ -271,29 +280,30 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
             Debug.Log("play haptic with NiceVibrations at: " + _timePos);
             HapticController.fallbackPreset = HapticPatterns.PresetType.Success;
             HapticController.Play(_hapticMaterial);
+            Debug.Log(_hapticMaterial.json.ToString());
         }
         else
         {
             Debug.Log("play haptic with InterHaptics at: " + _timePos);
             eventHapticSource.Play();
-            print(eventHapticSource.hapticMaterial.text);
+            Debug.Log(eventHapticSource.hapticMaterial.text);
         }
     }
     
     private void PlayInstandHaptic()
     {
-        
         if (useNiceVibrations)
         {
             Debug.Log("play haptic with NiceVibrations at: " + _timePos);
             HapticController.fallbackPreset = HapticPatterns.PresetType.Success;
             HapticController.Play(_instantHapticMaterial);
+            Debug.Log(_instantHapticMaterial.json.ToString());
         }
         else
         {
             Debug.Log("play haptic with InterHaptics at: " + _timePos);
-            eventHapticSource.Play();
-            print(eventHapticSource.hapticMaterial.text);
+            instanteventHapticSource.Play();
+            Debug.Log(instanteventHapticSource.hapticMaterial.text);
         }
     }
     
@@ -322,7 +332,7 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
             Debug.Log(secondPart);
             
             HapticMaterial hm = HapticMaterial.CreateInstanceFromString(parsedJsonInteHaptics);
-            eventHapticSource.hapticMaterial = hm;
+            instanteventHapticSource.hapticMaterial = hm;
             
             _instantHapticMaterial.name = namePart;
             _instantHapticMaterial.json = Encoding.UTF8.GetBytes(parsedJson);
@@ -345,10 +355,14 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
             _timeToPlayHaptic = sendTime;
             _toPlayHaptic = true;
             var parsedJson = ConvertToJsonNiceVibrations(secondPart);
+            var parsedJsonInteHaptics = ConvertToJsonInterHaptics(secondPart);
             Debug.Log(parsedJson);
             //Debug.Log(parsedJson);
             _hapticData = parsedJson;
-
+            
+            HapticMaterial hm = HapticMaterial.CreateInstanceFromString(parsedJsonInteHaptics);
+            eventHapticSource.hapticMaterial = hm;
+            
             _hapticMaterial.name = "ReaperHaptic";
             _hapticMaterial.json = Encoding.UTF8.GetBytes(parsedJson);
         }
