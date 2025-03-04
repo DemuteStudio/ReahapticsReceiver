@@ -173,7 +173,7 @@ MonoBehaviour:
   videoFilePathText: {fileID: 427762276}
   hapticFilePathText: {fileID: 1042718404}
   TesthapticMaterial: {fileID: -8404250095460277587, guid: 27b2f1a81ed0042058d5e12a4ff355c9, type: 3}
-  eventHapticSource: {fileID: 0}
+  eventHapticSource: {fileID: 1573989849}
 --- !u!4 &4334695
 Transform:
   m_ObjectHideFlags: 0
@@ -323,6 +323,54 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 18868287}
   m_CullTransparentMesh: 1
+--- !u!1 &31372405
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 31372407}
+  - component: {fileID: 31372406}
+  m_Layer: 0
+  m_Name: HapticBodypart
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &31372406
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 31372405}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eebe72f90241cb148ab7b48ca05a7747, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  BodyPart: 302
+  Side: 0
+  debugMode: 1
+  targetIntensity: 1
+--- !u!4 &31372407
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 31372405}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 278049519}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &55085158
 GameObject:
   m_ObjectHideFlags: 0
@@ -1502,6 +1550,40 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!1 &278049518
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 278049519}
+  m_Layer: 0
+  m_Name: Interhaptics
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &278049519
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 278049518}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 790.26794, y: 1177.6064, z: 18.813656}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 31372407}
+  - {fileID: 1573989848}
+  - {fileID: 1905922397}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &282686034
 GameObject:
   m_ObjectHideFlags: 0
@@ -1982,6 +2064,8 @@ MonoBehaviour:
   PortInput: {fileID: 1490458636}
   WarningPanel: {fileID: 1716321049}
   WarningPanelButton: {fileID: 1407166114}
+  eventHapticSource: {fileID: 1573989849}
+  instanteventHapticSource: {fileID: 0}
 --- !u!4 &342125111
 Transform:
   m_ObjectHideFlags: 0
@@ -8711,6 +8795,66 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1568950289}
   m_CullTransparentMesh: 1
+--- !u!1 &1573989847
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1573989848}
+  - component: {fileID: 1573989849}
+  m_Layer: 0
+  m_Name: HapticEventSource
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1573989848
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1573989847}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 278049519}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1573989849
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1573989847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb260b5179d54554bba4b12719baf5d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hapticMaterial: {fileID: -6750239444755058063, guid: 711bc4864d89fb1449689b172b80137a, type: 3}
+  useStreamingAssets: 0
+  hapticEffectStreamingAssetsPath: 
+  sourceIntensity: 1
+  vibrationOffset: 0
+  debugMode: 0
+  isLooping: 0
+  maxLoops: 1
+  maxLoopTime: 10
+  targetIntensity: 1
+  playAtStart: 0
+  isPlaying: 0
+  hapticEffectDuration: 0
+  loopStartTime: 0
+  hapticBodyParts:
+  - {fileID: 31372406}
 --- !u!1001 &1592054181
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9099,7 +9243,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1678517753
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9278,7 +9422,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 4.8476562, y: -25.001953}
+  m_AnchoredPosition: {x: 4.848633, y: -25.001953}
   m_SizeDelta: {x: 88.9719, y: 215.89}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1716321051
@@ -10137,6 +10281,66 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 6805972082971149835, guid: 326d4c3e5b467f84bbca33497f74d6f5, type: 3}
   m_PrefabInstance: {fileID: 1541083678}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1905922396
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1905922397}
+  - component: {fileID: 1905922398}
+  m_Layer: 0
+  m_Name: InstantHapticEventSource
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1905922397
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1905922396}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 278049519}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1905922398
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1905922396}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb260b5179d54554bba4b12719baf5d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hapticMaterial: {fileID: -6750239444755058063, guid: 63d9c1deb28a7d242976250a5bcb13a5, type: 3}
+  useStreamingAssets: 0
+  hapticEffectStreamingAssetsPath: 
+  sourceIntensity: 1
+  vibrationOffset: 0
+  debugMode: 0
+  isLooping: 0
+  maxLoops: 1
+  maxLoopTime: 10
+  targetIntensity: 1
+  playAtStart: 0
+  isPlaying: 0
+  hapticEffectDuration: 0
+  loopStartTime: 0
+  hapticBodyParts:
+  - {fileID: 31372406}
 --- !u!1 &1959061917
 GameObject:
   m_ObjectHideFlags: 0
@@ -10512,7 +10716,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2022259545
 RectTransform:
   m_ObjectHideFlags: 0
@@ -11347,3 +11551,4 @@ SceneRoots:
   - {fileID: 4334695}
   - {fileID: 266832534}
   - {fileID: 1414184534}
+  - {fileID: 278049519}
