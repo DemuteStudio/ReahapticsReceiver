@@ -9,6 +9,7 @@ using TMPro;
 using Lofelt.NiceVibrations;
 using System.Text;
 using Interhaptics;
+using Interhaptics.Core;
 using Interhaptics.Internal;
 using Interhaptics.Utils;
 
@@ -64,12 +65,6 @@ public class HapticTester : MonoBehaviour
 
     HapticPreviewData currentHapticData;
 
-    [Header("Nice Vibrations")]
-    public HapticClip TesthapticMaterial;
-
-    [Header("interhaptics")]
-    public EventHapticSource eventHapticSource;
-
     private float hapticTriggerTime;
     private bool hapticTriggered = false;
     
@@ -77,10 +72,8 @@ public class HapticTester : MonoBehaviour
     
     private List<HapticPreviewData> hapticsList = new List<HapticPreviewData>();
     
-    private string videoFileType;
-    private string hapticFileType;
-    
-    private HapticClip hapticMaterial;
+    private HapticClip _hapticClip;
+    private HapticMaterial _hapticMaterial;
     
     private string hapticDataFilePath;
 
@@ -89,12 +82,12 @@ public class HapticTester : MonoBehaviour
     {
         print("Is gampad connected: " + GamepadRumbler.IsConnected());
         currentHapticData = new HapticPreviewData();
-        hapticMaterial = ScriptableObject.CreateInstance<HapticClip>();
+        _hapticClip = ScriptableObject.CreateInstance<HapticClip>();
         hapticDataFilePath = Path.Combine(Application.persistentDataPath, "hapticData.json");
         screen.SetActive(false);
         
-        videoFileType = NativeFilePicker.ConvertExtensionToFileType("mp4");
-        hapticFileType = NativeFilePicker.ConvertExtensionToFileType("haptic"); 
+        NativeFilePicker.ConvertExtensionToFileType("mp4");
+        NativeFilePicker.ConvertExtensionToFileType("haptic"); 
         
         importViewButton.onClick.AddListener(OpenImportScreen);
         reaperViewButton.onClick.AddListener(OpenReaperView);
@@ -163,7 +156,7 @@ public class HapticTester : MonoBehaviour
         if (NativeFilePicker.IsFilePickerBusy())
             return;
 
-        string[] fileTypes = {NativeFilePicker.ConvertExtensionToFileType("haptic"), NativeFilePicker.ConvertExtensionToFileType("haps") };
+        string[] fileTypes = {};
 
         NativeFilePicker.PickFile((path) =>
         {
@@ -233,6 +226,7 @@ public class HapticTester : MonoBehaviour
             newHapticData.videoPath = currentHapticData.videoPath;
             newHapticData.triggerTime = currentHapticData.triggerTime;
             newHapticData.name = currentHapticData.name;
+            newHapticData.type = currentHapticData.type;
             hapticsList.Add(newHapticData);
             SaveHapticsDataToPersistentStorage(hapticsList);
             hasHapticDataSaved = true;
@@ -292,17 +286,17 @@ public class HapticTester : MonoBehaviour
     }
     private void PlayHapticDelayed()
     {
-        print("Playing haptic" + hapticMaterial.name + " at " + currentHapticData.triggerTime + " seconds");
-        if (currentHapticData.type == "haptic")
+        print("Playing haptic" + _hapticClip.name + " at " + currentHapticData.triggerTime + " seconds, of type " + currentHapticData.type);
+        if (currentHapticData.type == ".haptic")
         {
             HapticController.fallbackPreset = HapticPatterns.PresetType.Success;
-            HapticController.Play(hapticMaterial);
-            print(hapticMaterial.json);
+            HapticController.Play(_hapticClip);
+            print(_hapticClip.json);
         }
-        else 
+        if (currentHapticData.type == ".haps")
         {
-            eventHapticSource.Play();
-            print(eventHapticSource.hapticMaterial.text);
+            HAR.PlayHapticEffect(_hapticMaterial);
+            print(_hapticMaterial.text);
         }
     }
     public void SaveHapticsDataToPersistentStorage(List<HapticPreviewData> hapticDataList)
@@ -335,13 +329,13 @@ public class HapticTester : MonoBehaviour
             string json = File.ReadAllText(path); // Read JSON from file
             if (currentHapticData.type == ".haptic")
             {
-                hapticMaterial.name = Path.GetFileNameWithoutExtension(path);
-                hapticMaterial.json = Encoding.UTF8.GetBytes(json); // Parse JSON into HapticData object
-                Debug.Log("Haptic data loaded: " + hapticMaterial.json);
+                _hapticClip.name = Path.GetFileNameWithoutExtension(path);
+                _hapticClip.json = Encoding.UTF8.GetBytes(json); // Parse JSON into HapticData object
+                Debug.Log("Haptic data loaded: " + _hapticClip.json);
             }
             if (currentHapticData.type == ".haps")
             {
-                eventHapticSource.hapticMaterial = HapticMaterial.CreateInstanceFromString(json);
+                _hapticMaterial = HapticMaterial.CreateInstanceFromString(json);
             }
         }
         else
