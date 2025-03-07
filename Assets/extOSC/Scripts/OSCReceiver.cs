@@ -287,6 +287,11 @@ namespace extOSC
 			ClearBinds();
 		}
 
+		public string getLocalHost()
+		{
+			return OSCUtilities.GetLocalHost();
+        }
+
 		#endregion
 
 		#region Private Methods

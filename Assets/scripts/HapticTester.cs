@@ -199,16 +199,12 @@ public class HapticTester : MonoBehaviour
         hasHapticDataSaved = false;
         ReaperView.SetActive(false);
         ImportView.SetActive(true);
-        print("Is gampad connected: " + GamepadRumbler.IsConnected());
-        HapticController.Play(TesthapticMaterial);
     }
 
     private void OpenReaperView()
     {
         ImportView.SetActive(false);
         ReaperView.SetActive(true);
-        print("Is gampad connected: " + GamepadRumbler.IsConnected());
-        HapticController.Play(TesthapticMaterial);
     }
     
     private void CloseSettingsView()

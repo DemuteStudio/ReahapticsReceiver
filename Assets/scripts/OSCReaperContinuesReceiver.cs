@@ -151,33 +151,11 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
 
     private HapticMaterial _continueshapticMaterial;
     private HapticMaterial _instanthapticMaterial;
-
-
+    
     private bool useNiceVibrations = true;
-    public static string GetLocalIPAddress()
-    {
-        foreach (NetworkInterface netInterface in NetworkInterface.GetAllNetworkInterfaces())
-        {
-            // Check if it's Wi-Fi (for mobile, typically Wi-Fi or Ethernet)
-            if (netInterface.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 ||
-                netInterface.NetworkInterfaceType == NetworkInterfaceType.Ethernet)
-            {
-                foreach (UnicastIPAddressInformation ip in netInterface.GetIPProperties().UnicastAddresses)
-                {
-                    if (ip.Address.AddressFamily == AddressFamily.InterNetwork) // IPv4 only
-                    {
-                        return ip.Address.ToString();
-                    }
-                }
-            }
-        }
-        return "No WiFi IP found";
-    }
-    void Start()
-    {
-        IPText.text = GetLocalIPAddress();
-        Debug.Log($"IP:  {GetLocalIPAddress()}");
         
+    void Start()
+    {   
         toggleConnectButton.onClick.AddListener(ToggleListening);
         playHapticButton.onClick.AddListener(PlayInstandHaptic);
         WarningPanelButton.onClick.AddListener(CloseWarningPanel);
@@ -188,6 +166,7 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
         
         _receiver = gameObject.AddComponent<OSCReceiver>();
         _receiver.LocalPort = port;
+
         PortInput.text = port.ToString();
         // Bind handler for received messages
         _receiver.Bind(startStopAddress, message => ReceivedMessage(message));
@@ -195,8 +174,13 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
         _receiver.Bind(timeAddress, message => ReceivedMessage(message));
         _receiver.Bind(instantHapticAddress, message => ReceivedMessage(message));
         Debug.Log($"Listening for OSC messages on port {port}");
+        Invoke("SetIp", 1); 
     }
 
+    void SetIp()
+    {
+        IPText.text = _receiver.getLocalHost();
+    }
     public void SetHapticsMethod(int val)
     {
         if (val == 0)
