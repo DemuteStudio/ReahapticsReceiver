@@ -6,6 +6,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Collections.Generic;
+using System.Net.NetworkInformation;
 using System.Text.RegularExpressions;
 using System.Runtime.InteropServices;
 using extOSC.Core;
@@ -30,8 +31,32 @@ namespace extOSC
 		{
 			return Mathf.Clamp(port, 1, ushort.MaxValue);
 		}
-
 		public static string GetLocalHost()
+		{
+			foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
+			{
+				if ((ni.NetworkInterfaceType == NetworkInterfaceType.Ethernet ||
+				     ni.NetworkInterfaceType == NetworkInterfaceType.Wireless80211) &&
+				    ni.OperationalStatus == OperationalStatus.Up &&
+				    !ni.Description.ToLower().Contains("virtual") &&
+				    !ni.Name.ToLower().Contains("virtual") &&
+				    !ni.Description.ToLower().Contains("loopback"))
+				{
+					var ipProps = ni.GetIPProperties();
+
+					foreach (UnicastIPAddressInformation ip in ipProps.UnicastAddresses)
+					{
+						if (ip.Address.AddressFamily == AddressFamily.InterNetwork)
+						{
+							return ip.Address.ToString();
+						}
+					}
+				}
+			}
+			return null;
+		}
+		
+		public static string GetLocalHostOld()
 		{
 #if !UNITY_WSA
 			try
