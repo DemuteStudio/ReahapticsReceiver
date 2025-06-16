@@ -115,5 +115,53 @@ namespace Lofelt.NiceVibrations
             ctx.AddObjectToAsset("com.lofelt.HapticClip", hapticClip);
             ctx.SetMainObject(hapticClip);
         }
+        static public HapticClip JsonToHapticClip(byte[] jsonBytes)
+        {
+            // Load .haptic clip from file
+            var hapticClip = HapticClip.CreateInstance<HapticClip>();
+            hapticClip.json = jsonBytes;
+
+#if !NICE_VIBRATIONS_DISABLE_GAMEPAD_SUPPORT
+            // Convert JSON to a GamepadRumble struct. The conversion algorithm is inside the native
+            // library nice_vibrations_editor_plugin. That plugin is only used in the Unity editor, and
+            // not at runtime.
+            GamepadRumble rumble = default;
+            IntPtr nativeRumble = nv_plugin_convert_haptic_to_gamepad_rumble(jsonBytes, jsonBytes.Length);
+            if (nativeRumble != IntPtr.Zero)
+            {
+                try
+                {
+                    uint length = (uint)nv_plugin_get_length(nativeRumble);
+                    rumble.durationsMs = new int[length];
+                    rumble.lowFrequencyMotorSpeeds = new float[length];
+                    rumble.highFrequencyMotorSpeeds = new float[length];
+
+                    nv_plugin_get_durations(nativeRumble, rumble.durationsMs);
+                    nv_plugin_get_low_frequency_motor_speeds(nativeRumble, rumble.lowFrequencyMotorSpeeds);
+                    nv_plugin_get_high_frequency_motor_speeds(nativeRumble, rumble.highFrequencyMotorSpeeds);
+
+                    int totalDurationMs = 0;
+                    foreach (int duration in rumble.durationsMs)
+                    {
+                        totalDurationMs += duration;
+                    }
+                    rumble.totalDurationMs = totalDurationMs;
+                }
+                finally
+                {
+                    nv_plugin_destroy(nativeRumble);
+                }
+            }
+            else
+            {
+                var lastErrorPtr = nv_plugin_get_last_error();
+                var lastErrorLength = (int)nv_plugin_get_last_error_length();
+            }
+
+            hapticClip.gamepadRumble = rumble;
+#endif
+            return hapticClip;
+        }
     }
 }
+

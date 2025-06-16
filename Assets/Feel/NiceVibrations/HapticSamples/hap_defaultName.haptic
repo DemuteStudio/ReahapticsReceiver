@@ -1,0 +1,101 @@
+{
+    "version": {
+        "major": 1,
+        "minor": 0,
+        "patch": 0
+    },
+    "metadata": {
+        "editor": "Reaper",
+        "project": "hap_reaperTestExample"
+    },
+    "signals": {
+        "continuous": {
+            "envelopes": {
+                "amplitude": [
+                    {
+                        "time": 0.0,
+                        "amplitude": 0.0
+                    },
+                    {
+                        "time": 0.136,
+                        "amplitude": 0.659,
+                        "emphasis": {
+                            "amplitude": 1.0,
+                            "frequency": 1.0
+                        }
+                    },
+                    {
+                        "time": 0.194,
+                        "amplitude": 0.94
+                    },
+                    {
+                        "time": 0.388,
+                        "amplitude": 0.987,
+                        "emphasis": {
+                            "amplitude": 1.0,
+                            "frequency": 1.0
+                        }
+                    },
+                    {
+                        "time": 0.444,
+                        "amplitude": 1.0
+                    },
+                    {
+                        "time": 0.609,
+                        "amplitude": 0.834,
+                        "emphasis": {
+                            "amplitude": 1.0,
+                            "frequency": 1.0
+                        }
+                    },
+                    {
+                        "time": 0.643,
+                        "amplitude": 0.8
+                    },
+                    {
+                        "time": 0.795,
+                        "amplitude": 0.263
+                    },
+                    {
+                        "time": 1.0,
+                        "amplitude": 0.0
+                    }
+                ],
+                "frequency": [
+                    {
+                        "time": 0.0,
+                        "frequency": 0.0
+                    },
+                    {
+                        "time": 0.194,
+                        "frequency": 0.88
+                    },
+                    {
+                        "time": 0.334,
+                        "frequency": 1.0
+                    },
+                    {
+                        "time": 0.416,
+                        "frequency": 0.87
+                    },
+                    {
+                        "time": 0.553,
+                        "frequency": 1.0
+                    },
+                    {
+                        "time": 0.658,
+                        "frequency": 0.945
+                    },
+                    {
+                        "time": 0.821,
+                        "frequency": 0.295
+                    },
+                    {
+                        "time": 1.0,
+                        "frequency": 0.0
+                    }
+                ]
+            }
+        }
+    }
+}

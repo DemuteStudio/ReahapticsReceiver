@@ -146,7 +146,9 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
     private float _timeToPlayHaptic = 0;
     private bool _isListeneing = false;
 
+    [SerializeField]
     private HapticClip _continioushapticClip;
+    [SerializeField]
     private HapticClip _instantHapticClip;
 
     private HapticMaterial _continueshapticMaterial;
@@ -302,6 +304,7 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
             var parsedJson = ConvertToJsonNiceVibrations(secondPart);
             _instantHapticClip.name = namePart;
             _instantHapticClip.json = Encoding.UTF8.GetBytes(parsedJson);
+            _instantHapticClip = HapticImporter.JsonToHapticClip(Encoding.UTF8.GetBytes(parsedJson));
             hapticNameText.text = namePart;
 
             //interHaptics
@@ -310,8 +313,6 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
             _instanthapticMaterial = HapticMaterial.CreateInstanceFromString(parsedJsonInteHaptics);
             _instanthapticMaterial.name = namePart;
             Debug.Log(_instanthapticMaterial.text);
-            
-
         }
         
         if (_isListeneing == false) return;

@@ -1,0 +1,65 @@
+{
+    "version": {
+        "major": 1,
+        "minor": 0,
+        "patch": 0
+    },
+    "metadata": {
+        "editor": "Reaper",
+        "project": "hap_reaperTestExample"
+    },
+    "signals": {
+        "continuous": {
+            "envelopes": {
+                "amplitude": [
+                    {
+                        "time": 0.101,
+                        "amplitude": 1.284,
+                        "emphasis": {
+                            "amplitude": 1.284,
+                            "frequency": 0.918
+                        }
+                    },
+                    {
+                        "time": 0.282,
+                        "amplitude": 0.845
+                    },
+                    {
+                        "time": 0.442,
+                        "amplitude": 0.457
+                    },
+                    {
+                        "time": 0.447,
+                        "amplitude": 0.475
+                    },
+                    {
+                        "time": 0.452,
+                        "amplitude": 0.445
+                    },
+                    {
+                        "time": 0.755,
+                        "amplitude": 0.645
+                    },
+                    {
+                        "time": 1.0,
+                        "amplitude": 0.0
+                    }
+                ],
+                "frequency": [
+                    {
+                        "time": 0.287,
+                        "frequency": 0.895
+                    },
+                    {
+                        "time": 0.524,
+                        "frequency": 0.47
+                    },
+                    {
+                        "time": 1.0,
+                        "frequency": 0.0
+                    }
+                ]
+            }
+        }
+    }
+}
