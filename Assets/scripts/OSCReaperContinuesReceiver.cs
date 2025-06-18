@@ -1,132 +1,28 @@
 using System;
-using System.Collections;
-using System.Net;
-using System.Net.Sockets;
-using System.Collections.Generic;
-using System.Net.NetworkInformation;
-using UnityEngine;
-using extOSC; // Use the library of your choice
+using System.Text;
+using extOSC;
 using Lofelt.NiceVibrations;
 using TMPro;
+using UnityEngine;
 using UnityEngine.UI;
-using System.Text;
 using Interhaptics;
-using UnityEngine.Serialization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using UnityEngine.Serialization;
-using Interhaptics.Internal;
-using Interhaptics.Utils;
 using Interhaptics.Core;
-
-
-[Serializable]
-public class InputAmplitude
-{
-    public float time;
-    public float amplitude;
-    public InputEmphasis emphasis;
-}
-
-[Serializable]
-public class InputFrequency
-{
-    public float time;
-    public float frequency;
-}
-
-[Serializable]
-public class InputEmphasis
-{
-    public float amplitude;
-    public float frequency;
-}
-
-[Serializable]
-public class Input
-{
-    public List<InputAmplitude> amplitude;
-    public List<InputFrequency> frequency;
-}
-
-[Serializable]
-public class HapsFormatNote
-{
-    public float m_startingPoint;
-    public float m_length = 0.022f;
-    public int m_priority = 0;
-    public float m_gain;
-    public HapsFormatHapticEffect m_hapticEffect = new HapsFormatHapticEffect();
-}
-
-[Serializable]
-public class HapsFormatHapticEffect
-{
-    public int m_type = 0;
-    public HapsFormatModulation m_amplitudeModulation;
-    public HapsFormatModulation m_frequencyModulation;
-}
-
-[Serializable]
-public class HapsFormatModulation
-{
-    public int m_extrapolationStrategy = 0;
-    public List<HapsFormatKeyframe> m_keyframes = new List<HapsFormatKeyframe>();
-}
-
-[Serializable]
-public class HapsFormatKeyframe
-{
-    public float m_time;
-    public float m_value;
-}
-
-[Serializable]
-public class HapsFormatMelody
-{
-    public int m_mute = 0;
-    public float m_gain = 1.0f;
-    public List<HapsFormatNote> m_notes = new List<HapsFormatNote>();
-}
-
-[Serializable]
-public class HapsFormatVibration
-{
-    public int m_loop = 0;
-    public float m_maximum = 1.0f;
-    public float m_gain = 1.0f;
-    public int m_signalEvaluationMethod = 3;
-    public List<HapsFormatMelody> m_melodies = new List<HapsFormatMelody>();
-}
-
-[Serializable]
-public class HapsFormat
-{
-    public string m_version = "5";
-    public string m_description = "";
-    public int m_HDFlag = 0;
-    public int m_time_unit = 0;
-    public int m_length_unit = 7;
-    public HapsFormatVibration m_vibration = new HapsFormatVibration();
-    public HapsFormatVibration m_stiffness = new HapsFormatVibration();
-    public HapsFormatVibration m_texture = new HapsFormatVibration();
-    public float m_gain = 1.0f;
-}
 
 public class OSCReaperContinuesReceiver : MonoBehaviour
 {
-    //Constants
-    [SerializeField]
-    private TextMeshProUGUI text;
+    // Constants
+    [SerializeField] private TextMeshProUGUI text;
+
     [Header("OSC variables")]
     public string hapticAddress = "/HapticJson";
     public string instantHapticAddress = "/InstantHapticJson";
     public string timeAddress = "/CursorPos";
     public string startStopAddress = "/StartStop";
-    public int port = 7401; // Match this to the port Reaper sends to
+    public int port = 7401;
     private OSCReceiver _receiver;
 
     [Header("UI elements")]
+    public ViewManager viewManager;
     public Button playHapticButton;
     public Button toggleConnectButton;
     public Button loadHapticButton;
@@ -137,70 +33,76 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
     public TMP_InputField PortInput;
     public GameObject WarningPanel;
     public Button WarningPanelButton;
+    public Button importViewButton;
 
-    //Variables
+    // Variables
     private bool _isCursorMoving = false;
     private float _timePos = 0;
-
     private bool _toPlayHaptic = false;
     private float _timeToPlayHaptic = 0;
     private bool _isListeneing = false;
 
-    [SerializeField]
-    private HapticClip _continioushapticClip;
-    [SerializeField]
-    private HapticClip _instantHapticClip;
+    [SerializeField] private HapticClip _continioushapticClip;
+    [SerializeField] private HapticClip _instantHapticClip;
 
     private HapticMaterial _continueshapticMaterial;
     private HapticMaterial _instanthapticMaterial;
-    
+
     private bool useNiceVibrations = true;
-        
+
     void Start()
-    {   
+    {
+        InitializeUI();
+        InitializeHapticClips();
+        InitializeOSCReceiver();
+        Invoke("SetIp", 1);
+    }
+
+    private void InitializeUI()
+    {
+        importViewButton.onClick.AddListener(viewManager.ShowImportView);
         toggleConnectButton.onClick.AddListener(ToggleListening);
         playHapticButton.onClick.AddListener(PlayInstandHaptic);
         WarningPanelButton.onClick.AddListener(CloseWarningPanel);
         PortInput.onEndEdit.AddListener(OnPortIntputChanged);
-        
+        PortInput.text = port.ToString();
+    }
+
+    private void InitializeHapticClips()
+    {
         _continioushapticClip = ScriptableObject.CreateInstance<HapticClip>();
         _instantHapticClip = ScriptableObject.CreateInstance<HapticClip>();
-        
+    }
+
+    private void InitializeOSCReceiver()
+    {
         _receiver = gameObject.AddComponent<OSCReceiver>();
         _receiver.LocalPort = port;
 
-        PortInput.text = port.ToString();
-        // Bind handler for received messages
-        _receiver.Bind(startStopAddress, message => ReceivedMessage(message));
-        _receiver.Bind(hapticAddress, message => ReceivedMessage(message));
-        _receiver.Bind(timeAddress, message => ReceivedMessage(message));
-        _receiver.Bind(instantHapticAddress, message => ReceivedMessage(message));
+        _receiver.Bind(startStopAddress, ReceivedMessage);
+        _receiver.Bind(hapticAddress, ReceivedMessage);
+        _receiver.Bind(timeAddress, ReceivedMessage);
+        _receiver.Bind(instantHapticAddress, ReceivedMessage);
+
         Debug.Log($"Listening for OSC messages on port {port}");
-        Invoke("SetIp", 1); 
     }
 
     void SetIp()
     {
         IPText.text = _receiver.getLocalHost();
     }
+
     public void SetHapticsMethod(int val)
     {
-        if (val == 0)
-        {
-            useNiceVibrations = true;
-            Debug.Log($"Use Nice Virations");
-        }
-        else
-        {
-            useNiceVibrations = false;
-            Debug.Log($"Use InterHaptics");
-        }
+        useNiceVibrations = val == 0;
+        Debug.Log($"Use {(useNiceVibrations ? "Nice Vibrations" : "InterHaptics")}");
     }
 
     private void CloseWarningPanel()
     {
         WarningPanel.SetActive(false);
     }
+
     private void OnPortIntputChanged(string value)
     {
         if (int.TryParse(value, out int port))
@@ -209,36 +111,24 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
             Debug.Log($"Port changed to {port}");
         }
     }
+
     void ToggleListening()
     {
-        if (_isListeneing == false)
-        {
-            playHapticButton.gameObject.SetActive(false);
-            loadHapticButton.gameObject.SetActive(false);
+        _isListeneing = !_isListeneing;
 
-            _isListeneing = true;
-            connectedLight.SetActive(true);
-            HapticController.Stop();
-        }
-        else
-        {
-            playHapticButton.gameObject.SetActive(true);
-            loadHapticButton.gameObject.SetActive(true);
+        playHapticButton.gameObject.SetActive(!_isListeneing);
+        loadHapticButton.gameObject.SetActive(!_isListeneing);
+        connectedLight.SetActive(_isListeneing);
 
-            _isListeneing = false;
-            connectedLight.SetActive(false);
-            HapticController.Stop();
-        }
+        HapticController.Stop();
     }
-    
-    
+
     private void Update()
     {
         if (_isCursorMoving && _isListeneing)
         {
             _timePos += Time.deltaTime;
-            //Debug.Log(_timePos);
-            
+
             if (_timePos >= _timeToPlayHaptic && _toPlayHaptic)
             {
                 PlayHaptic();
@@ -254,8 +144,8 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
         {
             Debug.Log("play haptic with NiceVibrations at: " + _timePos);
             HapticController.fallbackPreset = HapticPatterns.PresetType.Success;
-            HapticController.Play(_continioushapticClip);
-            Debug.Log(_continioushapticClip.json.ToString());
+            HapticController.Play(_instantHapticClip);
+            Debug.Log(_instantHapticClip.json.ToString());
         }
         else
         {
@@ -263,7 +153,7 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
             HAR.PlayHapticEffect(_continueshapticMaterial);
         }
     }
-    
+
     private void PlayInstandHaptic()
     {
         if (useNiceVibrations)
@@ -279,7 +169,7 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
             HAR.PlayHapticEffect(_instanthapticMaterial);
         }
     }
-    
+
     private void StopHaptic()
     {
         HapticController.Stop();
@@ -289,221 +179,102 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
     {
         if (!_isListeneing && message.Address == instantHapticAddress)
         {
-            string input = message.Values[0].StringValue;
-            int newlineIndex = input.IndexOf('\n');
-            
-            string firstPart = input.Substring(0, newlineIndex);
-            string secondPart = input.Substring(newlineIndex + 1);
-            
-            // Extract the float value
-            string namePart = firstPart.Replace("name: ", "").Trim();
-            Debug.Log(namePart);
-            Debug.Log(secondPart);
-
-            //Nice Vibrations
-            var parsedJson = ConvertToJsonNiceVibrations(secondPart);
-            _instantHapticClip.name = namePart;
-            _instantHapticClip.json = Encoding.UTF8.GetBytes(parsedJson);
-            _instantHapticClip = HapticImporter.JsonToHapticClip(Encoding.UTF8.GetBytes(parsedJson));
-            hapticNameText.text = namePart;
-
-            //interHaptics
-            var parsedJsonInteHaptics = ConvertToJsonInterHaptics(secondPart);
-            Debug.Log(parsedJsonInteHaptics);
-            _instanthapticMaterial = HapticMaterial.CreateInstanceFromString(parsedJsonInteHaptics);
-            _instanthapticMaterial.name = namePart;
-            Debug.Log(_instanthapticMaterial.text);
+            ProcessInstantHapticMessage(message);
+            return;
         }
-        
+
         if (_isListeneing == false) return;
-        
-        if (message.Address == hapticAddress)
-        {
-            string input = message.Values[0].StringValue;
-            int newlineIndex = input.IndexOf('\n');
-            
-            string firstPart = input.Substring(0, newlineIndex);
-            string secondPart = input.Substring(newlineIndex + 1);
-            
-            // Extract the float value
-            string floatPart = firstPart.Replace("SendTime: ", "").Trim();
-            float.TryParse(floatPart, out float sendTime);
-            _timeToPlayHaptic = sendTime;
-            _toPlayHaptic = true;
 
-            //Nice Vibrations
-            var parsedJson = ConvertToJsonNiceVibrations(secondPart);
-            Debug.Log(parsedJson);
-            _continioushapticClip.name = "ReaperHaptic";
-            _continioushapticClip.json = Encoding.UTF8.GetBytes(parsedJson);
+        switch (message.Address)
+        {
+            case var _ when message.Address == hapticAddress:
+                ProcessHapticMessage(message);
+                break;
 
-            //InterHaptics
-            var parsedJsonInteHaptics = ConvertToJsonInterHaptics(secondPart);
-            Debug.Log(parsedJsonInteHaptics);
-            _continueshapticMaterial = HapticMaterial.CreateInstanceFromString(parsedJsonInteHaptics);
-            _continueshapticMaterial.name = "ContinuesHaptic";
-            Debug.Log(_continueshapticMaterial.text);
+            case var _ when message.Address == timeAddress:
+                _timePos = message.Values[0].FloatValue;
+                break;
+
+            case var _ when message.Address == startStopAddress:
+                ProcessStartStopMessage(message);
+                break;
         }
-        if (message.Address == timeAddress)
+    }
+
+    private void ProcessInstantHapticMessage(OSCMessage message)
+    {
+        string input = message.Values[0].StringValue;
+        int newlineIndex = input.IndexOf('\n');
+
+        string namePart = input.Substring(0, newlineIndex).Replace("name: ", "").Trim();
+        string jsonPart = input.Substring(newlineIndex + 1);
+
+        Debug.Log(namePart);
+        Debug.Log(jsonPart);
+
+        // Nice Vibrations
+        var parsedJson = HapticConverter.ConvertToJsonNiceVibrations(jsonPart);
+        _instantHapticClip = HapticImporter.JsonToHapticClip(Encoding.UTF8.GetBytes(parsedJson));
+        hapticNameText.text = namePart;
+
+        // InterHaptics
+        var parsedJsonInteHaptics = HapticConverter.ConvertToJsonInterHaptics(jsonPart);
+        Debug.Log(parsedJsonInteHaptics);
+        _instanthapticMaterial = HapticMaterial.CreateInstanceFromString(parsedJsonInteHaptics);
+        _instanthapticMaterial.name = namePart;
+        Debug.Log(_instanthapticMaterial.text);
+    }
+
+    private void ProcessHapticMessage(OSCMessage message)
+    {
+        string input = message.Values[0].StringValue;
+        int newlineIndex = input.IndexOf('\n');
+
+        string floatPart = input.Substring(0, newlineIndex).Replace("SendTime: ", "").Trim();
+        float.TryParse(floatPart, out float sendTime);
+        _timeToPlayHaptic = sendTime;
+        _toPlayHaptic = true;
+
+        string jsonPart = input.Substring(newlineIndex + 1);
+
+        // Nice Vibrations
+        var parsedJson = HapticConverter.ConvertToJsonNiceVibrations(jsonPart);
+        Debug.Log(parsedJson);
+        _continioushapticClip = HapticImporter.JsonToHapticClip(Encoding.UTF8.GetBytes(parsedJson));
+
+        // InterHaptics
+        var parsedJsonInteHaptics = HapticConverter.ConvertToJsonInterHaptics(jsonPart);
+        Debug.Log(parsedJsonInteHaptics);
+        _continueshapticMaterial = HapticMaterial.CreateInstanceFromString(parsedJsonInteHaptics);
+        _continueshapticMaterial.name = "ContinuesHaptic";
+        Debug.Log(_continueshapticMaterial.text);
+    }
+
+    private void ProcessStartStopMessage(OSCMessage message)
+    {
+        string s = message.Values[0].StringValue;
+
+        switch (s)
         {
-            _timePos = message.Values[0].FloatValue;
-            //Debug.Log("time received: " + _timePos);
-        }
-        if (message.Address == startStopAddress)
-        {
-            string s = message.Values[0].StringValue;
-            if (s == "started")
-            {
+            case "started":
                 _isCursorMoving = true;
                 Debug.Log(s);
                 connectedLightGreen.SetActive(true);
-            }
-            else if (s == "stopped")
-            {
+                break;
+
+            case "stopped":
                 _toPlayHaptic = false;
                 _isCursorMoving = false;
                 StopHaptic();
                 Debug.Log(s);
                 connectedLightGreen.SetActive(false);
-            }
-            else if (s == "moved")
-            {
+                break;
+
+            case "moved":
                 _toPlayHaptic = false;
                 StopHaptic();
                 Debug.Log(s);
-            }
+                break;
         }
-    }
-    public static string ConvertToJsonNiceVibrations(string input)
-    {
-        // Parse the input string into a JObject
-        JObject inputObject = JObject.Parse(input);
-
-        // Extract amplitude and frequency arrays
-        JArray amplitudeArray = (JArray)inputObject["amplitude"];
-        JArray frequencyArray = (JArray)inputObject["frequency"];
-
-        // Create the target JSON structure
-        var output = new
-        {
-            version = new { major = 1, minor = 0, patch = 0 },
-            metadata = new
-            {
-                editor = "ReaHaptic",
-                source = "",
-                project = "",
-                tags = new List<string>(),
-                description = ""
-            },
-            signals = new
-            {
-                continuous = new
-                {
-                    envelopes = new
-                    {
-                        amplitude = ProcessAmplitude(amplitudeArray),
-                        frequency = ProcessFrequency(frequencyArray)
-                    }
-                }
-            }
-        };
-
-        return JsonConvert.SerializeObject(output, Formatting.Indented);
-    }
-
-    public static string ConvertToJsonInterHaptics(string jsonInput)
-    {
-        Input input = JsonUtility.FromJson<Input>(jsonInput);
-        HapsFormat output = new HapsFormat();
-
-        HapsFormatMelody emphasisMelody = new HapsFormatMelody();
-        HapsFormatMelody mainMelody = new HapsFormatMelody();
-
-        foreach (var amp in input.amplitude)
-        {
-            if (amp.emphasis.amplitude != 0 || amp.emphasis.frequency != 0)
-            {
-                emphasisMelody.m_notes.Add(new HapsFormatNote
-                {
-                    m_startingPoint = (float)Math.Round(amp.time, 3),
-                    m_gain = (float)Math.Round(amp.emphasis.amplitude,3)
-                });
-            }
-        }
-
-        HapsFormatHapticEffect hapticEffect = new HapsFormatHapticEffect
-        {
-            m_amplitudeModulation = new HapsFormatModulation(),
-            m_frequencyModulation = new HapsFormatModulation()
-        };
-
-        foreach (var amp in input.amplitude)
-        {
-            hapticEffect.m_amplitudeModulation.m_keyframes.Add(new HapsFormatKeyframe { m_time = amp.time, m_value = amp.amplitude });
-        }
-
-        foreach (var freq in input.frequency)
-        {
-            hapticEffect.m_frequencyModulation.m_keyframes.Add(new HapsFormatKeyframe { m_time = freq.time, m_value = freq.frequency * 700f + 60f });
-        }
-
-        mainMelody.m_notes.Add(new HapsFormatNote
-        {
-            m_startingPoint = 0.0f,
-            m_length = 1.0f,
-            m_priority = 1,
-            m_gain = 1.0f,
-            m_hapticEffect = hapticEffect
-        });
-
-        output.m_vibration.m_melodies.Add(emphasisMelody);
-        output.m_vibration.m_melodies.Add(mainMelody);
-
-        return JsonUtility.ToJson(output, true);
-    }
-
-    private static List<object> ProcessAmplitude(JArray amplitudeArray)
-    {
-        var processedAmplitude = new List<object>();
-
-        foreach (var item in amplitudeArray)
-        {
-            var amplitudeObject = new Dictionary<string, object>
-            {
-                { "time", (float)item["time"] },
-                { "amplitude", (float)item["amplitude"] }
-            };
-
-            if (item["emphasis"] != null)
-            {
-                amplitudeObject["emphasis"] = new
-                {
-                    amplitude = (float)item["emphasis"]["amplitude"],
-                    frequency = (float)item["emphasis"]["frequency"]
-                };
-            }
-
-            processedAmplitude.Add(amplitudeObject);
-        }
-
-        return processedAmplitude;
-    }
-
-    private static List<object> ProcessFrequency(JArray frequencyArray)
-    {
-        var processedFrequency = new List<object>();
-
-        foreach (var item in frequencyArray)
-        {
-            var frequencyObject = new Dictionary<string, object>
-            {
-                { "time", (float)item["time"] },
-                { "frequency", (float)item["frequency"] }
-            };
-
-            processedFrequency.Add(frequencyObject);
-        }
-
-        return processedFrequency;
     }
 }

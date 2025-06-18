@@ -1,47 +1,21 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
-using System.IO;
 using TMPro;
 using Lofelt.NiceVibrations;
-using System.Text;
 using Interhaptics;
 using Interhaptics.Core;
-using Interhaptics.Internal;
-using Interhaptics.Utils;
-
-[System.Serializable]
-public class HapticPreviewData
-{
-    public string name = "NoHapticSet";
-    public string videoPath;
-    public string hapticPath;
-    public float triggerTime;
-    public string type;
-}
-
-[Serializable]
-public class HapticDataListWrapper
-{
-    public List<HapticPreviewData> hapticDataList;
-
-    public HapticDataListWrapper(List<HapticPreviewData> hapticDataList)
-    {
-        this.hapticDataList = hapticDataList;
-    }
-}
 
 public class HapticTester : MonoBehaviour
 {
     [Header("Reaper view")]
-    public Button importViewButton;
-    public Button settingsButton;
-    public Button closeSettingsButton;
-    
-    [Header("import view")]
+    public ViewManager viewManager;
+
+    [Header("Import view")]
     public Button reaperViewButton;
     public Button deleteButton;
     public Button loadVideoButton;
@@ -54,201 +28,103 @@ public class HapticTester : MonoBehaviour
     public TMP_Dropdown hapticDropdown;
     public VideoPlayer videoPlayer;
     public Button loadButton;
-    
-    [Header("general")]
-    public GameObject ReaperView;
-    public GameObject ImportView;
-    public GameObject SettingsView;
-    public GameObject screen;
     public TMP_Text videoFilePathText; // UI text to display the imported video file path
     public TMP_Text hapticFilePathText;
 
-    HapticPreviewData currentHapticData;
 
-    private float hapticTriggerTime;
-    private bool hapticTriggered = false;
-    
-    private bool hasHapticDataSaved = false;
-    
+    private HapticPreviewData currentHapticData;
     private List<HapticPreviewData> hapticsList = new List<HapticPreviewData>();
-    
+
     private HapticClip _hapticClip;
     private HapticMaterial _hapticMaterial;
-    
-    private string hapticDataFilePath;
 
+    private string hapticDataFilePath;
     private bool useNiceVibrations = true;
+    private bool hasHapticDataSaved = false;
+
     private void Start()
     {
-        print("Is gampad connected: " + GamepadRumbler.IsConnected());
+        Initialize();
+        SetupUIListeners();
+        LoadInitialData();
+    }
+
+    private void Initialize()
+    {
         currentHapticData = new HapticPreviewData();
         _hapticClip = ScriptableObject.CreateInstance<HapticClip>();
         hapticDataFilePath = Path.Combine(Application.persistentDataPath, "hapticData.json");
-        screen.SetActive(false);
-        
+        viewManager.screen.SetActive(false);
+
         NativeFilePicker.ConvertExtensionToFileType("mp4");
-        NativeFilePicker.ConvertExtensionToFileType("haptic"); 
-        
-        importViewButton.onClick.AddListener(OpenImportScreen);
-        reaperViewButton.onClick.AddListener(OpenReaperView);
-        settingsButton.onClick.AddListener(OpenSettingsView);
-        closeSettingsButton.onClick.AddListener(CloseSettingsView);
-        closeVideoButton.onClick.AddListener(CloseVideoScreen);
-        
+        NativeFilePicker.ConvertExtensionToFileType("haptic");
+    }
+
+    private void SetupUIListeners()
+    {
+        reaperViewButton.onClick.AddListener(viewManager.ShowReaperView);
+        closeVideoButton.onClick.AddListener(viewManager.CloseVideoScreen);
+
         saveButton.onClick.AddListener(SaveHaptic);
-        loadButton.onClick.AddListener(loadSelectedHaptic);
-        deleteButton.onClick.AddListener(deleteSelectedHaptic);
-        
+        loadButton.onClick.AddListener(LoadSelectedHaptic);
+        deleteButton.onClick.AddListener(DeleteSelectedHaptic);
+
         loadVideoButton.onClick.AddListener(ImportVideoFile);
         loadHapticButton.onClick.AddListener(ImportHapticFile);
-        
+
         PlayHapticPreviewButton.onClick.AddListener(PlayVideoWithHaptic);
         PlayHapticButton.onClick.AddListener(PlayHapticOnly);
-        
+
         triggerTimeInput.onEndEdit.AddListener(OnHapticTriggerTimeChanged);
         videoPlayer.loopPointReached += VideoPlayerLoopPointReached;
         videoPlayer.prepareCompleted += OnVideoPrepared;
-        LoadSavedHaptics();
+    }
+
+    private void LoadInitialData()
+    {
+        hapticsList = HapticFileManager.LoadHapticsDataFromFile(hapticDataFilePath);
+        UpdateDropdown();
     }
 
     public void SetHapticsMethod(int val)
     {
-        if (val == 1) useNiceVibrations = true;
-        else useNiceVibrations = false;
+        useNiceVibrations = val == 1;
     }
-    private void loadSelectedHaptic()
+
+    #region Haptic Data Management
+    private void LoadSelectedHaptic()
     {
         currentHapticData = hapticsList[hapticDropdown.value];
         videoFilePathText.text = Path.GetFileNameWithoutExtension(currentHapticData.videoPath);
         hapticFilePathText.text = Path.GetFileNameWithoutExtension(currentHapticData.hapticPath);
     }
-    
-    private void deleteSelectedHaptic()
+
+    private void DeleteSelectedHaptic()
     {
         hapticsList.RemoveAt(hapticDropdown.value);
-        SaveHapticsDataToPersistentStorage(hapticsList);
+        HapticFileManager.SaveHapticsDataToPersistentStorage(hapticsList, hapticDataFilePath);
         UpdateDropdown();
-    }
-    private void ImportVideoFile()
-    {
-        if (NativeFilePicker.IsFilePickerBusy())
-            return;
-
-        string[] fileTypes = { NativeFilePicker.ConvertExtensionToFileType("mp4") };
-
-        NativeFilePicker.PickFile((path) =>
-        {
-            if (path == null)
-            {
-                Debug.Log("Video operation cancelled");
-            }
-            else
-            {
-                Debug.Log("video file: " + Path.GetFileNameWithoutExtension(path));
-                videoFilePathText.text = Path.GetFileNameWithoutExtension(path);
-                currentHapticData.videoPath = path;
-            }
-        }, fileTypes);
-    }
-    
-    private void ImportHapticFile()
-    {
-        if (NativeFilePicker.IsFilePickerBusy())
-            return;
-
-        string[] fileTypes = {};
-
-        NativeFilePicker.PickFile((path) =>
-        {
-            if (path == null)
-            {
-                Debug.Log("Haptic operation cancelled");
-            }
-            else
-            {
-                Debug.Log("haptic file: " + Path.GetFileNameWithoutExtension(path));
-                string type = Path.GetExtension(path);
-                currentHapticData.type = type;
-                Debug.Log("haptic type: " + type);
-
-                hapticFilePathText.text = Path.GetFileNameWithoutExtension(path);
-                currentHapticData.hapticPath = path;
-                currentHapticData.name = Path.GetFileNameWithoutExtension(path);
-            }
-        }, fileTypes);
-    }
-    private void VideoPlayerLoopPointReached(VideoPlayer vp)
-    {
-        CloseVideoScreen();
-    }
-    private void CloseVideoScreen()
-    {
-        screen.SetActive(false);
-        ImportView.SetActive(true);
-        CancelInvoke();
-    }
-    private void OpenImportScreen()
-    {
-        hasHapticDataSaved = false;
-        ReaperView.SetActive(false);
-        ImportView.SetActive(true);
-    }
-
-    private void OpenReaperView()
-    {
-        ImportView.SetActive(false);
-        ReaperView.SetActive(true);
-    }
-    
-    private void CloseSettingsView()
-    {
-        ImportView.SetActive(false);
-        SettingsView.SetActive(false);
-        ReaperView.SetActive(true);
-        settingsButton.gameObject.SetActive(true);
-    }
-    
-    private void OpenSettingsView()
-    {
-        ReaperView.SetActive(false);
-        ImportView.SetActive(false);
-        SettingsView.SetActive(true);
-        settingsButton.gameObject.SetActive(false);
-
     }
 
     private void SaveHaptic()
     {
-        if (!hasHapticDataSaved)
+        if (hasHapticDataSaved) return;
+
+        var newHapticData = new HapticPreviewData
         {
-            HapticPreviewData newHapticData = new HapticPreviewData();
-            newHapticData.hapticPath = currentHapticData.hapticPath;
-            newHapticData.videoPath = currentHapticData.videoPath;
-            newHapticData.triggerTime = currentHapticData.triggerTime;
-            newHapticData.name = currentHapticData.name;
-            newHapticData.type = currentHapticData.type;
-            hapticsList.Add(newHapticData);
-            SaveHapticsDataToPersistentStorage(hapticsList);
-            hasHapticDataSaved = true;
-            UpdateDropdown();
-        }
-    }
-    
-    private void LoadSavedHaptics()
-    {
-        if (File.Exists(hapticDataFilePath))
-        {
-            string json = File.ReadAllText(hapticDataFilePath);
-            HapticDataListWrapper wrapper = JsonUtility.FromJson<HapticDataListWrapper>(json);
-            hapticsList = wrapper.hapticDataList;
-        }
-        else
-        {
-            Debug.LogWarning("No haptic data found at " + hapticDataFilePath);
-        }
+            hapticPath = currentHapticData.hapticPath,
+            videoPath = currentHapticData.videoPath,
+            triggerTime = currentHapticData.triggerTime,
+            name = currentHapticData.name,
+            type = currentHapticData.type
+        };
+
+        hapticsList.Add(newHapticData);
+        HapticFileManager.SaveHapticsDataToPersistentStorage(hapticsList, hapticDataFilePath);
+        hasHapticDataSaved = true;
         UpdateDropdown();
     }
-    
+
     private void UpdateDropdown()
     {
         hapticDropdown.ClearOptions();
@@ -257,91 +133,119 @@ public class HapticTester : MonoBehaviour
             hapticDropdown.options.Add(new TMP_Dropdown.OptionData(haptic.name));
         }
     }
-    
-    private void PlayVideoWithHaptic()
-    {
-        LoadAndParseHapticFile(currentHapticData.hapticPath);
-        videoPlayer.url = currentHapticData.videoPath;
+    #endregion
 
-        ReaperView.SetActive(false);
-        ImportView.SetActive(false);
-        screen.SetActive(true);
-        videoPlayer.Prepare();
+    #region File Import Methods
+    private void ImportVideoFile()
+    {
+        if (NativeFilePicker.IsFilePickerBusy()) return;
+
+        string[] fileTypes = { NativeFilePicker.ConvertExtensionToFileType("mp4") };
+
+        NativeFilePicker.PickFile((path) =>
+        {
+            if (path == null)
+            {
+                Debug.Log("Video operation cancelled");
+                return;
+            }
+
+            videoFilePathText.text = Path.GetFileNameWithoutExtension(path);
+            currentHapticData.videoPath = path;
+        }, fileTypes);
     }
-    
+
+    private void ImportHapticFile()
+    {
+        if (NativeFilePicker.IsFilePickerBusy()) return;
+
+        string[] fileTypes = { NativeFilePicker.ConvertExtensionToFileType("haptic") };
+
+        NativeFilePicker.PickFile((path) =>
+        {
+            if (path == null)
+            {
+                Debug.Log("Haptic operation cancelled");
+                return;
+            }
+
+            string type = Path.GetExtension(path);
+            currentHapticData.type = type;
+            hapticFilePathText.text = Path.GetFileNameWithoutExtension(path);
+            currentHapticData.hapticPath = path;
+            currentHapticData.name = Path.GetFileNameWithoutExtension(path);
+            Debug.Log($"Haptic file: {currentHapticData.name}, type: {type}");
+        }, fileTypes);
+    }
+    #endregion
+
+    #region Video Player Methods
+    private void VideoPlayerLoopPointReached(VideoPlayer vp)
+    {
+        viewManager.CloseVideoScreen();
+    }
+
+
     private void OnVideoPrepared(VideoPlayer source)
     {
         videoPlayer.Play();
         PlayHaptic();
     }
-    
+
+    private void PlayVideoWithHaptic()
+    {
+        HapticFileManager.LoadAndParseHapticFile(
+            currentHapticData.hapticPath,
+            currentHapticData.type,
+            ref _hapticClip,
+            ref _hapticMaterial);
+
+        videoPlayer.url = currentHapticData.videoPath;
+        viewManager.ShowVideoScreen();
+        videoPlayer.Prepare();
+    }
+    #endregion
+
+    #region Haptic Playback Methods
     private void PlayHapticOnly()
     {
-        LoadAndParseHapticFile(currentHapticData.hapticPath);
+        HapticFileManager.LoadAndParseHapticFile(
+            currentHapticData.hapticPath,
+            currentHapticData.type,
+            ref _hapticClip,
+            ref _hapticMaterial);
+
         PlayHapticDelayed();
     }
+
     private void PlayHaptic()
     {
-        Invoke("PlayHapticDelayed", currentHapticData.triggerTime);
+        Invoke(nameof(PlayHapticDelayed), currentHapticData.triggerTime);
     }
+
     private void PlayHapticDelayed()
     {
-        print("Playing haptic" + _hapticClip.name + " at " + currentHapticData.triggerTime + " seconds, of type " + currentHapticData.type);
+        Debug.Log($"Playing haptic {_hapticClip.name} at {currentHapticData.triggerTime} seconds, of type {currentHapticData.type}");
+
         if (currentHapticData.type == ".haptic")
         {
             HapticController.fallbackPreset = HapticPatterns.PresetType.Success;
             HapticController.Play(_hapticClip);
-            print(_hapticClip.json);
+            Debug.Log(_hapticClip.json);
         }
-        if (currentHapticData.type == ".haps")
+        else if (currentHapticData.type == ".haps")
         {
             HAR.PlayHapticEffect(_hapticMaterial);
-            print(_hapticMaterial.text);
+            Debug.Log(_hapticMaterial.text);
         }
     }
-    public void SaveHapticsDataToPersistentStorage(List<HapticPreviewData> hapticDataList)
-    {
-        try
-        {
-            // Serialize the list to JSON
-            string json = JsonUtility.ToJson(new HapticDataListWrapper(hapticDataList));
+    #endregion
 
-            // Write the JSON to a file in persistent storage
-            File.WriteAllText(hapticDataFilePath, json);
-
-            Debug.Log("Haptic data saved successfully.");
-        }
-        catch (Exception e)
-        {
-            Debug.LogError("Failed to save haptic data: " + e.Message);
-        }
-    }
-    
     private void OnHapticTriggerTimeChanged(string value)
     {
-        currentHapticData.triggerTime = float.Parse(value);
-    }
-    
-    private void LoadAndParseHapticFile(string path)
-    {
-        if (File.Exists(path))
+        if (float.TryParse(value, out float time))
         {
-            string json = File.ReadAllText(path); // Read JSON from file
-            if (currentHapticData.type == ".haptic")
-            {
-                _hapticClip.name = Path.GetFileNameWithoutExtension(path);
-                _hapticClip.json = Encoding.UTF8.GetBytes(json); // Parse JSON into HapticData object
-                Debug.Log("Haptic data loaded: " + _hapticClip.json);
-            }
-            if (currentHapticData.type == ".haps")
-            {
-                _hapticMaterial = HapticMaterial.CreateInstanceFromString(json);
-            }
-        }
-        else
-        {
-            Debug.LogError("Haptic file not found: " + path);
+            currentHapticData.triggerTime = time;
         }
     }
-    
 }
