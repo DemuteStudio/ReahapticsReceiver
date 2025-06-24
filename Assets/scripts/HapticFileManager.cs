@@ -48,7 +48,7 @@ public static class HapticFileManager
 
         if (type == ".haptic")
         {
-            hapticClip = HapticImporter.JsonToHapticClip(Encoding.UTF8.GetBytes(json));
+            hapticClip = NiceVibrationsNative.JsonToHapticClip(Encoding.UTF8.GetBytes(json));
             hapticClip.name = Path.GetFileNameWithoutExtension(path);
             Debug.Log("Haptic data loaded: " + hapticClip.json);
         }

@@ -4,6 +4,8 @@ using System;
 using System.Diagnostics;
 using System.Timers;
 using UnityEngine;
+using XInputDotNetPure;
+
 
 // There are 3 conditions for working gamepad support in Nice Vibrations:
 //
@@ -27,7 +29,6 @@ using UnityEngine;
 // If any of the 3 conditions is not met, GamepadRumbler doesn't contain any calls into
 // UnityEngine.InputSystem, and CanPlay() always returns false.
 #if ((!UNITY_ANDROID && !UNITY_IOS) || UNITY_EDITOR) && NICE_VIBRATIONS_INPUTSYSTEM_INSTALLED && ENABLE_INPUT_SYSTEM && !NICE_VIBRATIONS_DISABLE_GAMEPAD_SUPPORT
-using UnityEngine.InputSystem;
 #endif
 
 namespace Lofelt.NiceVibrations
@@ -309,6 +310,7 @@ namespace Lofelt.NiceVibrations
             if (GetGamepad(currentGamepadID) != null)
             {
                 GetGamepad(currentGamepadID).ResetHaptics();
+                //GamePad.SetVibration(PlayerIndex.One, 0f, 0f);
             }
             rumbleTimer.Enabled = false;
             rumbleIndex = -1;
@@ -416,6 +418,7 @@ namespace Lofelt.NiceVibrations
             if (currentGamepad != null)
             {
                 currentGamepad.SetMotorSpeeds(lowFrequencySpeed, highFrequencySpeed);
+                //GamePad.SetVibration(PlayerIndex.One, lowFrequencySpeed, highFrequencySpeed);
             }
             else
             {

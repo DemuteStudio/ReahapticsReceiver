@@ -5,12 +5,8 @@ using System.Runtime.InteropServices;
 using System;
 using UnityEngine;
 using System.Text;
-
-#if UNITY_2020_2_OR_NEWER
 using UnityEditor.AssetImporters;
-#elif UNITY_2019_4_OR_NEWER
-using UnityEditor.Experimental.AssetImporters;
-#endif
+
 
 namespace Lofelt.NiceVibrations
 {

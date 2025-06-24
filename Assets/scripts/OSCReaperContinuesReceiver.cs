@@ -7,7 +7,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using Interhaptics;
 using Interhaptics.Core;
-
+using UnityEngine.InputSystem;
+using XInputDotNetPure;
 public class OSCReaperContinuesReceiver : MonoBehaviour
 {
     // Constants
@@ -31,8 +32,6 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
     public TextMeshProUGUI hapticNameText;
     public TextMeshProUGUI IPText;
     public TMP_InputField PortInput;
-    public GameObject WarningPanel;
-    public Button WarningPanelButton;
     public Button importViewButton;
 
     // Variables
@@ -52,6 +51,7 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
 
     void Start()
     {
+        Application.runInBackground = true;
         InitializeUI();
         InitializeHapticClips();
         InitializeOSCReceiver();
@@ -63,7 +63,6 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
         importViewButton.onClick.AddListener(viewManager.ShowImportView);
         toggleConnectButton.onClick.AddListener(ToggleListening);
         playHapticButton.onClick.AddListener(PlayInstandHaptic);
-        WarningPanelButton.onClick.AddListener(CloseWarningPanel);
         PortInput.onEndEdit.AddListener(OnPortIntputChanged);
         PortInput.text = port.ToString();
     }
@@ -98,10 +97,6 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
         Debug.Log($"Use {(useNiceVibrations ? "Nice Vibrations" : "InterHaptics")}");
     }
 
-    private void CloseWarningPanel()
-    {
-        WarningPanel.SetActive(false);
-    }
 
     private void OnPortIntputChanged(string value)
     {
@@ -142,14 +137,13 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
     {
         if (useNiceVibrations)
         {
-            Debug.Log("play haptic with NiceVibrations at: " + _timePos);
+            Debug.Log("play continious haptic with NiceVibrations at: " + _timePos);
             HapticController.fallbackPreset = HapticPatterns.PresetType.Success;
-            HapticController.Play(_instantHapticClip);
-            Debug.Log(_instantHapticClip.json.ToString());
+            HapticController.Play(_continioushapticClip);
         }
         else
         {
-            Debug.Log("play haptic with InterHaptics at: " + _timePos);
+            Debug.Log("play continious haptic with InterHaptics at: " + _timePos);
             HAR.PlayHapticEffect(_continueshapticMaterial);
         }
     }
@@ -158,14 +152,13 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
     {
         if (useNiceVibrations)
         {
-            Debug.Log("play haptic with NiceVibrations at: " + _timePos);
+            Debug.Log("play instand haptic with NiceVibrations at: " + _timePos);
             HapticController.fallbackPreset = HapticPatterns.PresetType.Success;
             HapticController.Play(_instantHapticClip);
-            Debug.Log(_instantHapticClip.json.ToString());
         }
         else
         {
-            Debug.Log("play haptic with InterHaptics at: " + _timePos);
+            Debug.Log("play instand haptic with InterHaptics at: " + _timePos);
             HAR.PlayHapticEffect(_instanthapticMaterial);
         }
     }
@@ -209,20 +202,21 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
         string namePart = input.Substring(0, newlineIndex).Replace("name: ", "").Trim();
         string jsonPart = input.Substring(newlineIndex + 1);
 
-        Debug.Log(namePart);
-        Debug.Log(jsonPart);
+        //Debug.Log(namePart);
+        //Debug.Log(jsonPart);
 
         // Nice Vibrations
         var parsedJson = HapticConverter.ConvertToJsonNiceVibrations(jsonPart);
-        _instantHapticClip = HapticImporter.JsonToHapticClip(Encoding.UTF8.GetBytes(parsedJson));
+        _instantHapticClip = NiceVibrationsNative.JsonToHapticClip(Encoding.UTF8.GetBytes(parsedJson));
         hapticNameText.text = namePart;
+        Debug.Log(System.Text.Encoding.UTF8.GetString(_instantHapticClip.json));
 
         // InterHaptics
         var parsedJsonInteHaptics = HapticConverter.ConvertToJsonInterHaptics(jsonPart);
-        Debug.Log(parsedJsonInteHaptics);
+        //Debug.Log(parsedJsonInteHaptics);
         _instanthapticMaterial = HapticMaterial.CreateInstanceFromString(parsedJsonInteHaptics);
         _instanthapticMaterial.name = namePart;
-        Debug.Log(_instanthapticMaterial.text);
+        //Debug.Log(_instanthapticMaterial.text);
     }
 
     private void ProcessHapticMessage(OSCMessage message)
@@ -239,15 +233,16 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
 
         // Nice Vibrations
         var parsedJson = HapticConverter.ConvertToJsonNiceVibrations(jsonPart);
-        Debug.Log(parsedJson);
-        _continioushapticClip = HapticImporter.JsonToHapticClip(Encoding.UTF8.GetBytes(parsedJson));
+        
+        _continioushapticClip = NiceVibrationsNative.JsonToHapticClip(Encoding.UTF8.GetBytes(parsedJson));
+        Debug.Log(System.Text.Encoding.UTF8.GetString(_continioushapticClip.json));
 
         // InterHaptics
         var parsedJsonInteHaptics = HapticConverter.ConvertToJsonInterHaptics(jsonPart);
-        Debug.Log(parsedJsonInteHaptics);
+        //Debug.Log(parsedJsonInteHaptics);
         _continueshapticMaterial = HapticMaterial.CreateInstanceFromString(parsedJsonInteHaptics);
         _continueshapticMaterial.name = "ContinuesHaptic";
-        Debug.Log(_continueshapticMaterial.text);
+        //Debug.Log(_continueshapticMaterial.text);
     }
 
     private void ProcessStartStopMessage(OSCMessage message)

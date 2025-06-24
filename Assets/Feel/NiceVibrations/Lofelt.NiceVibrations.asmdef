@@ -1,7 +1,9 @@
 {
     "name": "Lofelt.NiceVibrations",
+    "rootNamespace": "",
     "references": [
-        "GUID:75469ad4d38634e559750d17036d5f7c"
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:b97ca5096de2e204189a12bf57c511d5"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
