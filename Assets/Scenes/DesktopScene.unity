@@ -544,8 +544,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 48.5, y: -50}
-  m_SizeDelta: {x: 506.5802, y: 215.8921}
+  m_AnchoredPosition: {x: 48.50006, y: -50}
+  m_SizeDelta: {x: 3612, y: 215.9}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &461230882
 MonoBehaviour:
@@ -1556,17 +1556,6 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 6805972082971149835, guid: 326d4c3e5b467f84bbca33497f74d6f5, type: 3}
   m_PrefabInstance: {fileID: 1407166112}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1407166114 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8877950516388824736, guid: 326d4c3e5b467f84bbca33497f74d6f5, type: 3}
-  m_PrefabInstance: {fileID: 1407166112}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!224 &1472450781 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 511103945689801025, guid: bd42359b20bd7994381720f6f952c119, type: 3}
@@ -3669,8 +3658,6 @@ MonoBehaviour:
   hapticNameText: {fileID: 2936185595589216127}
   IPText: {fileID: 0}
   PortInput: {fileID: 1490458636}
-  WarningPanel: {fileID: 1716321049}
-  WarningPanelButton: {fileID: 1407166114}
   importViewButton: {fileID: 0}
   _continioushapticClip: {fileID: -8404250095460277587, guid: 774a8d912d0b64e40bb9bafbb56a88ea, type: 3}
   _instantHapticClip: {fileID: -8404250095460277587, guid: 774a8d912d0b64e40bb9bafbb56a88ea, type: 3}
@@ -3709,8 +3696,6 @@ MonoBehaviour:
   hapticNameText: {fileID: 2936185595589216127}
   IPText: {fileID: 0}
   PortInput: {fileID: 1490458636}
-  WarningPanel: {fileID: 0}
-  WarningPanelButton: {fileID: 0}
   importViewButton: {fileID: 7295142131854103881}
   _continioushapticClip: {fileID: -8404250095460277587, guid: 774a8d912d0b64e40bb9bafbb56a88ea, type: 3}
   _instantHapticClip: {fileID: -8404250095460277587, guid: 774a8d912d0b64e40bb9bafbb56a88ea, type: 3}

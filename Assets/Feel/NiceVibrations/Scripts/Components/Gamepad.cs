@@ -309,8 +309,8 @@ namespace Lofelt.NiceVibrations
 #if ((!UNITY_ANDROID && !UNITY_IOS) || UNITY_EDITOR) && NICE_VIBRATIONS_INPUTSYSTEM_INSTALLED && ENABLE_INPUT_SYSTEM && !NICE_VIBRATIONS_DISABLE_GAMEPAD_SUPPORT
             if (GetGamepad(currentGamepadID) != null)
             {
-                GetGamepad(currentGamepadID).ResetHaptics();
-                //GamePad.SetVibration(PlayerIndex.One, 0f, 0f);
+                //GetGamepad(currentGamepadID).ResetHaptics();
+                GamePad.SetVibration(PlayerIndex.One, 0f, 0f);
             }
             rumbleTimer.Enabled = false;
             rumbleIndex = -1;
@@ -417,8 +417,8 @@ namespace Lofelt.NiceVibrations
             // Check if gamepad was disconnected while playing
             if (currentGamepad != null)
             {
-                currentGamepad.SetMotorSpeeds(lowFrequencySpeed, highFrequencySpeed);
-                //GamePad.SetVibration(PlayerIndex.One, lowFrequencySpeed, highFrequencySpeed);
+                //currentGamepad.SetMotorSpeeds(lowFrequencySpeed, highFrequencySpeed);
+                GamePad.SetVibration(PlayerIndex.One, lowFrequencySpeed, highFrequencySpeed);
             }
             else
             {
