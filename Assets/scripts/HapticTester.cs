@@ -9,6 +9,8 @@ using TMPro;
 using Lofelt.NiceVibrations;
 using Interhaptics;
 using Interhaptics.Core;
+using System.Collections;
+using SimpleFileBrowser;
 
 public class HapticTester : MonoBehaviour
 {
@@ -97,12 +99,14 @@ public class HapticTester : MonoBehaviour
         currentHapticData = hapticsList[hapticDropdown.value];
         videoFilePathText.text = Path.GetFileNameWithoutExtension(currentHapticData.videoPath);
         hapticFilePathText.text = Path.GetFileNameWithoutExtension(currentHapticData.hapticPath);
+        hasHapticDataSaved = false;
     }
 
     private void DeleteSelectedHaptic()
     {
         hapticsList.RemoveAt(hapticDropdown.value);
         HapticFileManager.SaveHapticsDataToPersistentStorage(hapticsList, hapticDataFilePath);
+        hasHapticDataSaved = false;
         UpdateDropdown();
     }
 
@@ -135,9 +139,21 @@ public class HapticTester : MonoBehaviour
     }
     #endregion
 
-    #region File Import Methods
     private void ImportVideoFile()
     {
+#if UNITY_STANDALONE_WIN
+        StartCoroutine(ShowFileBrowser("mp4", (path) =>
+        {
+            if (path == null)
+            {
+                Debug.Log("Video operation cancelled");
+                return;
+            }
+
+            videoFilePathText.text = Path.GetFileNameWithoutExtension(path);
+            currentHapticData.videoPath = path;
+        }));
+#else
         if (NativeFilePicker.IsFilePickerBusy()) return;
 
         string[] fileTypes = { NativeFilePicker.ConvertExtensionToFileType("mp4") };
@@ -153,10 +169,28 @@ public class HapticTester : MonoBehaviour
             videoFilePathText.text = Path.GetFileNameWithoutExtension(path);
             currentHapticData.videoPath = path;
         }, fileTypes);
+#endif
     }
 
     private void ImportHapticFile()
     {
+#if UNITY_STANDALONE_WIN
+        StartCoroutine(ShowFileBrowser("haptic", (path) =>
+        {
+            if (path == null)
+            {
+                Debug.Log("Haptic operation cancelled");
+                return;
+            }
+
+            string type = Path.GetExtension(path);
+            currentHapticData.type = type;
+            hapticFilePathText.text = Path.GetFileNameWithoutExtension(path);
+            currentHapticData.hapticPath = path;
+            currentHapticData.name = Path.GetFileNameWithoutExtension(path);
+            Debug.Log($"Haptic file: {currentHapticData.name}, type: {type}, path: {path}");
+        }));
+#else
         if (NativeFilePicker.IsFilePickerBusy()) return;
 
         string[] fileTypes = { NativeFilePicker.ConvertExtensionToFileType("haptic") };
@@ -176,10 +210,27 @@ public class HapticTester : MonoBehaviour
             currentHapticData.name = Path.GetFileNameWithoutExtension(path);
             Debug.Log($"Haptic file: {currentHapticData.name}, type: {type}");
         }, fileTypes);
+#endif
     }
-    #endregion
 
-    #region Video Player Methods
+#if UNITY_STANDALONE_WIN
+    private IEnumerator ShowFileBrowser(string extension, System.Action<string> callback)
+    {
+        FileBrowser.SetFilters(false, new FileBrowser.Filter(extension.ToUpper() + " files", extension));
+        FileBrowser.SetDefaultFilter(extension);
+        FileBrowser.SetExcludedExtensions(".lnk", ".tmp", ".zip", ".rar", ".exe");
+
+        yield return FileBrowser.WaitForLoadDialog(FileBrowser.PickMode.Files, false, null, null, "Select File", "Select");
+
+        if (FileBrowser.Success)
+            callback(FileBrowser.Result[0]);
+        else
+            callback(null);
+    }
+#endif
+
+
+#region Video Player Methods
     private void VideoPlayerLoopPointReached(VideoPlayer vp)
     {
         viewManager.CloseVideoScreen();
@@ -200,13 +251,14 @@ public class HapticTester : MonoBehaviour
             ref _hapticClip,
             ref _hapticMaterial);
 
+        videoPlayer.Stop();
         videoPlayer.url = currentHapticData.videoPath;
         viewManager.ShowVideoScreen();
         videoPlayer.Prepare();
     }
-    #endregion
+#endregion
 
-    #region Haptic Playback Methods
+#region Haptic Playback Methods
     private void PlayHapticOnly()
     {
         HapticFileManager.LoadAndParseHapticFile(
@@ -239,7 +291,7 @@ public class HapticTester : MonoBehaviour
             Debug.Log(_hapticMaterial.text);
         }
     }
-    #endregion
+#endregion
 
     private void OnHapticTriggerTimeChanged(string value)
     {
