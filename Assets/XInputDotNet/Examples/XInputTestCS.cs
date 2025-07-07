@@ -1,8 +1,11 @@
 using UnityEngine;
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
 using XInputDotNetPure; // Required in C#
+#endif
 
 public class XInputTestCS : MonoBehaviour
 {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
     bool playerIndexSet = false;
     PlayerIndex playerIndex;
     GamePadState state;
@@ -71,4 +74,5 @@ public class XInputTestCS : MonoBehaviour
         text += string.Format("\tSticks Left {0} {1} Right {2} {3}\n", state.ThumbSticks.Left.X, state.ThumbSticks.Left.Y, state.ThumbSticks.Right.X, state.ThumbSticks.Right.Y);
         GUI.Label(new Rect(0, 0, Screen.width, Screen.height), text);
     }
+#endif
 }

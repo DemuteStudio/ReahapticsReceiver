@@ -1852,17 +1852,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7ea4d4157e3f28498aad16f555f10a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &2609875727897198178 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6329796807550240982, guid: 7124f919c43cd344e9c68093c40c6a4a, type: 3}
-  m_PrefabInstance: {fileID: 8269950502619202409}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d89f7849590087b4aa8bae6ba214b824, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!224 &3223823619325145841 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 4073170822368552506, guid: 7124f919c43cd344e9c68093c40c6a4a, type: 3}
@@ -2542,7 +2531,8 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 263277185248671723, guid: 7124f919c43cd344e9c68093c40c6a4a, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7124f919c43cd344e9c68093c40c6a4a, type: 3}
@@ -2645,7 +2635,7 @@ PrefabInstance:
     - target: {fileID: 8731195333786685983, guid: cd7cc8e3778f8a64e96ab6d1160d69d0, type: 3}
       propertyPath: myhapticTester
       value: 
-      objectReference: {fileID: 2609875727897198178}
+      objectReference: {fileID: 0}
     - target: {fileID: 8731195333786685983, guid: cd7cc8e3778f8a64e96ab6d1160d69d0, type: 3}
       propertyPath: myOSCReaperContinuesReceiver
       value: 

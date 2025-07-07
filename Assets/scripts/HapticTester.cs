@@ -193,7 +193,6 @@ public class HapticTester : MonoBehaviour
 #else
         if (NativeFilePicker.IsFilePickerBusy()) return;
 
-        string[] fileTypes = { NativeFilePicker.ConvertExtensionToFileType("haptic") };
 
         NativeFilePicker.PickFile((path) =>
         {
@@ -209,7 +208,7 @@ public class HapticTester : MonoBehaviour
             currentHapticData.hapticPath = path;
             currentHapticData.name = Path.GetFileNameWithoutExtension(path);
             Debug.Log($"Haptic file: {currentHapticData.name}, type: {type}");
-        }, fileTypes);
+        });
 #endif
     }
 

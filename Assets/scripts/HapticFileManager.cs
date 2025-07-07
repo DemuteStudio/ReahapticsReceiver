@@ -48,7 +48,11 @@ public static class HapticFileManager
 
         if (type == ".haptic")
         {
+#if UNITY_STANDALONE_WIN
             hapticClip = NiceVibrationsNative.JsonToHapticClip(Encoding.UTF8.GetBytes(json));
+#else
+            hapticClip.json = Encoding.UTF8.GetBytes(json);
+#endif
             hapticClip.name = Path.GetFileNameWithoutExtension(path);
             Debug.Log("Haptic data loaded: " + hapticClip.json);
         }

@@ -8,17 +8,17 @@ using UnityEngine.UI;
 using Interhaptics;
 using Interhaptics.Core;
 using UnityEngine.InputSystem;
-using XInputDotNetPure;
+
 public class OSCReaperContinuesReceiver : MonoBehaviour
 {
     // Constants
     [SerializeField] private TextMeshProUGUI text;
 
     [Header("OSC variables")]
-    public string hapticAddress = "/HapticJson";
-    public string instantHapticAddress = "/InstantHapticJson";
-    public string timeAddress = "/CursorPos";
-    public string startStopAddress = "/StartStop";
+    string hapticAddress = "/HapticJson";
+    string instantHapticAddress = "/InstantHapticJson";
+    string timeAddress = "/CursorPos";
+    string startStopAddress = "/StartStop";
     public int port = 7401;
     private OSCReceiver _receiver;
 
@@ -170,9 +170,13 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
 
     private void ReceivedMessage(OSCMessage message)
     {
+        Debug.Log("Recieved OSC messageat at adress: " + message.Address + " | With message: " + message.Values[0].StringValue);
+        Debug.Log("instand OSC adress: " + instantHapticAddress);
         if (!_isListeneing && message.Address == instantHapticAddress)
         {
-            ProcessInstantHapticMessage(message);
+            Debug.Log("Recieved instand OSC message");
+
+           ProcessInstantHapticMessage(message);
             return;
         }
 
@@ -207,7 +211,11 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
 
         // Nice Vibrations
         var parsedJson = HapticConverter.ConvertToJsonNiceVibrations(jsonPart);
+#if UNITY_STANDALONE_WIN
         _instantHapticClip = NiceVibrationsNative.JsonToHapticClip(Encoding.UTF8.GetBytes(parsedJson));
+#else
+        _instantHapticClip.json = Encoding.UTF8.GetBytes(parsedJson);
+#endif
         hapticNameText.text = namePart;
         Debug.Log(System.Text.Encoding.UTF8.GetString(_instantHapticClip.json));
 
@@ -234,7 +242,11 @@ public class OSCReaperContinuesReceiver : MonoBehaviour
         // Nice Vibrations
         var parsedJson = HapticConverter.ConvertToJsonNiceVibrations(jsonPart);
         
+#if UNITY_STANDALONE_WIN
         _continioushapticClip = NiceVibrationsNative.JsonToHapticClip(Encoding.UTF8.GetBytes(parsedJson));
+#else
+        _continioushapticClip.json = Encoding.UTF8.GetBytes(parsedJson);
+#endif
         Debug.Log(System.Text.Encoding.UTF8.GetString(_continioushapticClip.json));
 
         // InterHaptics
