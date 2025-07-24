@@ -4,8 +4,10 @@ using System;
 using System.Diagnostics;
 using System.Timers;
 using UnityEngine;
-using XInputDotNetPure;
 
+#if ((!UNITY_ANDROID && !UNITY_IOS) || UNITY_EDITOR) && NICE_VIBRATIONS_INPUTSYSTEM_INSTALLED && ENABLE_INPUT_SYSTEM && !NICE_VIBRATIONS_DISABLE_GAMEPAD_SUPPORT
+using XInputDotNetPure;
+#endif
 
 // There are 3 conditions for working gamepad support in Nice Vibrations:
 //
