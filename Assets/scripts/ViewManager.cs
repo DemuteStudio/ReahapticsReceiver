@@ -11,13 +11,15 @@ public class ViewManager : MonoBehaviour
 
     [Header("Button References")]
     public Button settingsButton;
-
+    public Button DemuteButton;
+    
     private GameObject currentView;
     private GameObject previousView;
     private void Start()
     {
         currentView = ReaperView;
         settingsButton.onClick.AddListener(ShowSettingsView);
+        DemuteButton.onClick.AddListener(GoToDemute);
     }
 
     public void ShowReaperView()
@@ -68,5 +70,10 @@ public class ViewManager : MonoBehaviour
     {
         screen.SetActive(false);
         ImportView.SetActive(true);
+    }
+    
+    private void GoToDemute()
+    {
+        Application.OpenURL("https://www.demute.studio/");
     }
 }

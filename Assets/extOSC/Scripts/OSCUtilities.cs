@@ -53,6 +53,27 @@ namespace extOSC
 					}
 				}
 			}
+
+			// Fallback: Try any active interface with a valid IPv4 address (needed for some Android devices)
+			foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
+			{
+				if (ni.OperationalStatus == OperationalStatus.Up &&
+				    ni.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
+				    !ni.Description.ToLower().Contains("virtual") &&
+				    !ni.Name.ToLower().Contains("virtual"))
+				{
+					var ipProps = ni.GetIPProperties();
+
+					foreach (UnicastIPAddressInformation ip in ipProps.UnicastAddresses)
+					{
+						if (ip.Address.AddressFamily == AddressFamily.InterNetwork &&
+						    !ip.Address.ToString().StartsWith("127."))
+						{
+							return ip.Address.ToString();
+						}
+					}
+				}
+			}
 			return null;
 		}
 		

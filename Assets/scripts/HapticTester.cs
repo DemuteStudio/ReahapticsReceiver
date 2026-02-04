@@ -44,11 +44,28 @@ public class HapticTester : MonoBehaviour
     private bool useNiceVibrations = true;
     private bool hasHapticDataSaved = false;
 
+    [Header("Visualizer")]
+    [SerializeField] private HapticVisualizerIntegration visualizerIntegration;
+
+    // Visualizer tracking state
+    private bool _isTrackingTime = false;
+    private float _hapticStartTime = 0f;
+    private float _currentPlaybackTime = 0f;
+
     private void Start()
     {
         Initialize();
         SetupUIListeners();
         LoadInitialData();
+    }
+
+    private void Update()
+    {
+        if (_isTrackingTime && visualizerIntegration != null)
+        {
+            _currentPlaybackTime += Time.deltaTime;
+            visualizerIntegration.UpdateTime(_currentPlaybackTime);
+        }
     }
 
     private void Initialize()
@@ -94,12 +111,66 @@ public class HapticTester : MonoBehaviour
     }
 
     #region Haptic Data Management
+    /// <summary>
+    /// Converts haptic file data to HapticInputData format for the visualizer.
+    /// </summary>
+    private string ConvertHapticToInputData(string jsonData, string fileType)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(fileType))
+            {
+                Debug.LogWarning("[HapticTester] File type is null or empty, returning original data");
+                return jsonData;
+            }
+
+            string lowerFileType = fileType.ToLower();
+
+            if (lowerFileType == ".haptic")
+            {
+                Debug.Log("[HapticTester] Converting Nice Vibrations format to HapticInputData");
+                return HapticConverter.ConvertFromJsonNiceVibrations(jsonData);
+            }
+            else if (lowerFileType == ".haps")
+            {
+                Debug.Log("[HapticTester] Converting InterHaptics format to HapticInputData");
+                return HapticConverter.ConvertFromJsonInterHaptics(jsonData);
+            }
+            else
+            {
+                Debug.LogWarning($"[HapticTester] Unknown file type '{fileType}', returning original data");
+                return jsonData;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[HapticTester] Failed to convert haptic data: {ex.Message}");
+            return jsonData; // Fallback to original data
+        }
+    }
+
     private void LoadSelectedHaptic()
     {
         currentHapticData = hapticsList[hapticDropdown.value];
         videoFilePathText.text = Path.GetFileNameWithoutExtension(currentHapticData.videoPath);
         hapticFilePathText.text = Path.GetFileNameWithoutExtension(currentHapticData.hapticPath);
         hasHapticDataSaved = false;
+
+        // Load the haptic data into visualizer when selecting from dropdown
+        if (visualizerIntegration != null && !string.IsNullOrEmpty(currentHapticData.hapticPath))
+        {
+            try
+            {
+                string hapticJson = File.ReadAllText(currentHapticData.hapticPath);
+                string convertedJson = ConvertHapticToInputData(hapticJson, currentHapticData.type);
+                visualizerIntegration.LoadHapticData(convertedJson);
+                Debug.Log($"[HapticTester] Loaded selected haptic into visualizer: {currentHapticData.name}");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[HapticTester] Failed to load haptic into visualizer: {ex.Message}");
+            }
+        }
     }
 
     private void DeleteSelectedHaptic()
@@ -189,6 +260,15 @@ public class HapticTester : MonoBehaviour
             currentHapticData.hapticPath = path;
             currentHapticData.name = Path.GetFileNameWithoutExtension(path);
             Debug.Log($"Haptic file: {currentHapticData.name}, type: {type}, path: {path}");
+
+            // Load haptic data into visualizer
+            if (visualizerIntegration != null)
+            {
+                string hapticJson = File.ReadAllText(path);
+                string convertedJson = ConvertHapticToInputData(hapticJson, type);
+                visualizerIntegration.LoadHapticData(convertedJson);
+                Debug.Log($"[HapticTester] Loaded haptic data into visualizer");
+            }
         }));
 #else
         if (NativeFilePicker.IsFilePickerBusy()) return;
@@ -208,8 +288,18 @@ public class HapticTester : MonoBehaviour
             currentHapticData.hapticPath = path;
             currentHapticData.name = Path.GetFileNameWithoutExtension(path);
             Debug.Log($"Haptic file: {currentHapticData.name}, type: {type}");
+
+            // Load haptic data into visualizer
+            if (visualizerIntegration != null)
+            {
+                string hapticJson = File.ReadAllText(path);
+                string convertedJson = ConvertHapticToInputData(hapticJson, type);
+                visualizerIntegration.LoadHapticData(convertedJson);
+                Debug.Log($"[HapticTester] Loaded haptic data into visualizer");
+            }
         });
 #endif
+
     }
 
 #if UNITY_STANDALONE_WIN
@@ -232,6 +322,7 @@ public class HapticTester : MonoBehaviour
 #region Video Player Methods
     private void VideoPlayerLoopPointReached(VideoPlayer vp)
     {
+        StopTracking();
         viewManager.CloseVideoScreen();
     }
 
@@ -239,6 +330,7 @@ public class HapticTester : MonoBehaviour
     private void OnVideoPrepared(VideoPlayer source)
     {
         videoPlayer.Play();
+        StartTracking();
         PlayHaptic();
     }
 
@@ -249,7 +341,6 @@ public class HapticTester : MonoBehaviour
             currentHapticData.type,
             ref _hapticClip,
             ref _hapticMaterial);
-
         videoPlayer.Stop();
         videoPlayer.url = currentHapticData.videoPath;
         viewManager.ShowVideoScreen();
@@ -266,7 +357,12 @@ public class HapticTester : MonoBehaviour
             ref _hapticClip,
             ref _hapticMaterial);
 
+        StartTracking();
         PlayHapticDelayed();
+
+        // Schedule stop tracking based on haptic duration (estimate ~3 seconds if unknown)
+        float hapticDuration = 3f; // You could parse this from the haptic file if available
+        Invoke(nameof(StopTracking), hapticDuration);
     }
 
     private void PlayHaptic()
@@ -299,4 +395,27 @@ public class HapticTester : MonoBehaviour
             currentHapticData.triggerTime = time;
         }
     }
+
+    #region Visualizer Tracking Methods
+    private void StartTracking()
+    {
+        if (visualizerIntegration == null) return;
+
+        _isTrackingTime = true;
+        _currentPlaybackTime = 0f;
+        _hapticStartTime = Time.time;
+        visualizerIntegration.StartTracking();
+        Debug.Log("[HapticTester] Started visualizer tracking");
+    }
+
+    private void StopTracking()
+    {
+        if (visualizerIntegration == null) return;
+
+        _isTrackingTime = false;
+        _currentPlaybackTime = 0f;
+        visualizerIntegration.StopTracking();
+        Debug.Log("[HapticTester] Stopped visualizer tracking");
+    }
+    #endregion
 }

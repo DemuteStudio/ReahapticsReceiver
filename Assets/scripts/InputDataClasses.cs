@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 [Serializable]
 public class InputAmplitude
@@ -24,7 +25,7 @@ public class InputEmphasis
 }
 
 [Serializable]
-public class Input
+public class HapticInputData
 {
     public List<InputAmplitude> amplitude;
     public List<InputFrequency> frequency;
@@ -43,8 +44,11 @@ public class HapsFormatNote
 [Serializable]
 public class HapsFormatHapticEffect
 {
-    public int m_type = 0;
+    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    public int? m_type = null;
+    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
     public HapsFormatModulation m_amplitudeModulation;
+    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
     public HapsFormatModulation m_frequencyModulation;
 }
 
@@ -88,8 +92,8 @@ public class HapsFormat
     public int m_HDFlag = 0;
     public int m_time_unit = 0;
     public int m_length_unit = 7;
-    public HapsFormatVibration m_vibration = new HapsFormatVibration();
     public HapsFormatVibration m_stiffness = new HapsFormatVibration();
     public HapsFormatVibration m_texture = new HapsFormatVibration();
+    public HapsFormatVibration m_vibration = new HapsFormatVibration();
     public float m_gain = 1.0f;
 }

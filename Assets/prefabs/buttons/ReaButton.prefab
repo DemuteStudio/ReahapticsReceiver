@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 5773664059931521038}
   - component: {fileID: 8877950516388824736}
   - component: {fileID: -4392208896786160773}
+  - component: {fileID: 1142156500432681771}
   m_Layer: 5
   m_Name: ReaButton
   m_TagString: Untagged
@@ -61,7 +62,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.4627451, g: 0.7258698, b: 0.9254902, a: 1}
+  m_Color: {r: 0.4305358, g: 0.53324777, b: 0.7075472, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -135,6 +136,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Delegates: []
+--- !u!114 &1142156500432681771
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5001608434386839087}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8fa8c9d562800140ad2d9c22adee35a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pressScale: 0.95
+  pressDownDuration: 0.1
+  pressUpDuration: 0.1
+  enablePunch: 1
+  punchScale: 0.05
+  punchDuration: 0.1
+  enableColorChange: 1
+  pressedColor: {r: 1, g: 0.9009434, b: 0.97073483, a: 1}
 --- !u!1 &6903338113388951175
 GameObject:
   m_ObjectHideFlags: 0
@@ -202,8 +223,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Text
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 4eccd51250cfa3948a3ac1e21d15fe34, type: 2}
-  m_sharedMaterial: {fileID: 7304186015023537574, guid: 4eccd51250cfa3948a3ac1e21d15fe34, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
