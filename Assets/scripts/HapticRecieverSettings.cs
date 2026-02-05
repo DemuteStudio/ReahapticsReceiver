@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -21,7 +22,12 @@ public class HapticRecieverSettings : MonoBehaviour
         hapticDropdown.ClearOptions();
         hapticDropdown.options.Add(new TMP_Dropdown.OptionData("Nice Vibrations"));
         hapticDropdown.options.Add(new TMP_Dropdown.OptionData("InterHaptics"));
-        hapticDropdown.options.Add(new TMP_Dropdown.OptionData("RichTab"));
+        //hapticDropdown.options.Add(new TMP_Dropdown.OptionData("RichTab"));
+    }
+
+    private void OnEnable()
+    {
+        myOSCReaperContinuesReceiver.UpdateIPDisplay();
     }
 
     private void SetHapticPlaybackMethod(int val)

@@ -33,6 +33,7 @@ namespace extOSC
 		}
 		public static string GetLocalHost()
 		{
+			// 1: Physical adapters (Ethernet/WiFi) - Highest priority
 			foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
 			{
 				if ((ni.NetworkInterfaceType == NetworkInterfaceType.Ethernet ||
@@ -54,13 +55,15 @@ namespace extOSC
 				}
 			}
 
-			// Fallback: Try any active interface with a valid IPv4 address (needed for some Android devices)
+			// 2: Mobile connectivity (PPP/WWAN) - Medium priority
+			// Supports USB tethering and mobile hotspot connections
 			foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
 			{
-				if (ni.OperationalStatus == OperationalStatus.Up &&
-				    ni.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
-				    !ni.Description.ToLower().Contains("virtual") &&
-				    !ni.Name.ToLower().Contains("virtual"))
+				if ((ni.NetworkInterfaceType == NetworkInterfaceType.Ppp ||
+				     ni.NetworkInterfaceType == NetworkInterfaceType.Wwanpp ||
+				     ni.NetworkInterfaceType == NetworkInterfaceType.Wwanpp2) &&
+				    ni.OperationalStatus == OperationalStatus.Up &&
+				    ni.NetworkInterfaceType != NetworkInterfaceType.Loopback)
 				{
 					var ipProps = ni.GetIPProperties();
 
@@ -74,6 +77,64 @@ namespace extOSC
 					}
 				}
 			}
+
+			// 3: Catch-all fallback - Low priority
+			// Accept any active interface, but deprioritize known VM adapters
+			List<NetworkInterface> otherInterfaces = new List<NetworkInterface>();
+			List<NetworkInterface> vmInterfaces = new List<NetworkInterface>();
+
+			foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
+			{
+				if (ni.OperationalStatus == OperationalStatus.Up &&
+				    ni.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+				{
+					string descLower = ni.Description.ToLower();
+					string nameLower = ni.Name.ToLower();
+
+					// Identify VM adapters
+					if (descLower.Contains("virtualbox") || descLower.Contains("vmware") ||
+					    descLower.Contains("hyper-v") || nameLower.Contains("virtualbox") ||
+					    nameLower.Contains("vmware") || nameLower.Contains("hyper-v"))
+					{
+						vmInterfaces.Add(ni);
+					}
+					else
+					{
+						otherInterfaces.Add(ni);
+					}
+				}
+			}
+
+			// Try non-VM interfaces first
+			foreach (NetworkInterface ni in otherInterfaces)
+			{
+				var ipProps = ni.GetIPProperties();
+
+				foreach (UnicastIPAddressInformation ip in ipProps.UnicastAddresses)
+				{
+					if (ip.Address.AddressFamily == AddressFamily.InterNetwork &&
+					    !ip.Address.ToString().StartsWith("127."))
+					{
+						return ip.Address.ToString();
+					}
+				}
+			}
+
+			// Last resort: try VM interfaces
+			foreach (NetworkInterface ni in vmInterfaces)
+			{
+				var ipProps = ni.GetIPProperties();
+
+				foreach (UnicastIPAddressInformation ip in ipProps.UnicastAddresses)
+				{
+					if (ip.Address.AddressFamily == AddressFamily.InterNetwork &&
+					    !ip.Address.ToString().StartsWith("127."))
+					{
+						return ip.Address.ToString();
+					}
+				}
+			}
+
 			return null;
 		}
 		

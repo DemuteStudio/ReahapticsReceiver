@@ -92,7 +92,8 @@ public class OSCReaperContinuesReceiver  : MonoBehaviour
             InitializeOSCReceiver();
             
             // Delay IP setting to ensure receiver is fully initialized
-            Invoke(nameof(UpdateIPDisplay), 1f);
+            // Extended to 2 seconds to allow mobile hotspot interfaces to stabilize
+            Invoke(nameof(UpdateIPDisplay), 2f);
             
             LogMessage("Haptic receiver initialized successfully");
         }
@@ -542,7 +543,7 @@ public class OSCReaperContinuesReceiver  : MonoBehaviour
             connectedLightGreen.SetActive(isActive);
     }
     
-    private void UpdateIPDisplay()
+    public void UpdateIPDisplay()
     {
         try
         {
