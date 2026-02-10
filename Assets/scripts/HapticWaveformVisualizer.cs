@@ -52,6 +52,7 @@ public class HapticWaveformVisualizer : MonoBehaviour
     private bool isExternallyControlled = false;
     private Sprite whiteSprite;
     private string lastLoadedJsonData = "";
+    private float lastKnownContainerWidth = 0f;
 
     private void Awake()
     {
@@ -93,9 +94,11 @@ public class HapticWaveformVisualizer : MonoBehaviour
         // Calculate dynamic bar width and spacing to fill container
         float containerWidth = waveformContainer.rect.width;
         float availableWidth = containerWidth - (2f * horizontalPadding);
-        
+
         barWidth = availableWidth / (barCount + barSpacingRatio * (barCount - 1));
         barSpacing = barWidth * barSpacingRatio;
+
+        lastKnownContainerWidth = containerWidth;
 
         Debug.Log($"[HapticWaveformVisualizer] Container width: {containerWidth:F1}, Available: {availableWidth:F1}, BarWidth: {barWidth:F2}, BarSpacing: {barSpacing:F2}");
 
@@ -185,6 +188,14 @@ public class HapticWaveformVisualizer : MonoBehaviour
         lastLoadedJsonData = jsonData;
         Debug.LogWarning($"[HapticWaveformVisualizer] LoadHapticData called at {Time.time:F3} - Loading NEW haptic data!");
         Debug.Log($"[HapticWaveformVisualizer] LoadHapticData called with data length: {jsonData?.Length ?? 0}");
+
+        // Check if container width has changed and reinitialize if needed
+        float currentContainerWidth = waveformContainer.rect.width;
+        if (Mathf.Abs(currentContainerWidth - lastKnownContainerWidth) > 1f)
+        {
+            Debug.Log($"[HapticWaveformVisualizer] Container width changed from {lastKnownContainerWidth:F1} to {currentContainerWidth:F1}, reinitializing");
+            InitializeWaveform();
+        }
 
         try
         {

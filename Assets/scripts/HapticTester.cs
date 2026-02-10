@@ -29,7 +29,6 @@ public class HapticTester : MonoBehaviour
     public TMP_InputField triggerTimeInput;
     public TMP_Dropdown hapticDropdown;
     public VideoPlayer videoPlayer;
-    public Button loadButton;
     public TMP_Text videoFilePathText; // UI text to display the imported video file path
     public TMP_Text hapticFilePathText;
 
@@ -83,9 +82,9 @@ public class HapticTester : MonoBehaviour
     {
         reaperViewButton.onClick.AddListener(viewManager.ShowReaperView);
         closeVideoButton.onClick.AddListener(viewManager.CloseVideoScreen);
+        hapticDropdown.onValueChanged.AddListener(LoadSelectedHaptic);
 
         saveButton.onClick.AddListener(SaveHaptic);
-        loadButton.onClick.AddListener(LoadSelectedHaptic);
         deleteButton.onClick.AddListener(DeleteSelectedHaptic);
 
         loadVideoButton.onClick.AddListener(ImportVideoFile);
@@ -149,9 +148,9 @@ public class HapticTester : MonoBehaviour
         }
     }
 
-    private void LoadSelectedHaptic()
+    private void LoadSelectedHaptic(int value)
     {
-        currentHapticData = hapticsList[hapticDropdown.value];
+        currentHapticData = hapticsList[value];
         videoFilePathText.text = Path.GetFileNameWithoutExtension(currentHapticData.videoPath);
         hapticFilePathText.text = Path.GetFileNameWithoutExtension(currentHapticData.hapticPath);
         hasHapticDataSaved = false;
@@ -183,8 +182,6 @@ public class HapticTester : MonoBehaviour
 
     private void SaveHaptic()
     {
-        if (hasHapticDataSaved) return;
-
         var newHapticData = new HapticPreviewData
         {
             hapticPath = currentHapticData.hapticPath,
@@ -193,13 +190,25 @@ public class HapticTester : MonoBehaviour
             name = currentHapticData.name,
             type = currentHapticData.type
         };
-
+        if (IsHapticIsAlreadyInList(newHapticData)) return;
         hapticsList.Add(newHapticData);
         HapticFileManager.SaveHapticsDataToPersistentStorage(hapticsList, hapticDataFilePath);
         hasHapticDataSaved = true;
         UpdateDropdown();
     }
 
+    private bool IsHapticIsAlreadyInList(HapticPreviewData hapticData)
+    {
+        foreach (var haptic in hapticsList)
+        {
+            if (haptic.hapticPath == hapticData.hapticPath && haptic.videoPath == hapticData.videoPath)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     private void UpdateDropdown()
     {
         hapticDropdown.ClearOptions();

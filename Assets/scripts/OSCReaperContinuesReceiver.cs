@@ -532,9 +532,27 @@ public class OSCReaperContinuesReceiver  : MonoBehaviour
     
     private void UpdateUIState()
     {
-        if (playHapticButton != null) playHapticButton.gameObject.SetActive(!_isListening);
-        if (loadHapticButton != null) loadHapticButton.gameObject.SetActive(!_isListening);
+        if (playHapticButton != null) playHapticButton.interactable = !_isListening;
+        if (loadHapticButton != null) loadHapticButton.interactable = !_isListening;
         if (connectedLight != null) connectedLight.SetActive(_isListening);
+        ToggleButton(playHapticButton.gameObject);
+        ToggleButton(loadHapticButton.gameObject);
+    }
+
+    private void ToggleButton(GameObject gm)
+    {
+        Color disabledTint = new Color(1f, 1f, 1f, 0.4f);
+        Color enabledTint = Color.white;
+        // Tint TextMeshPro
+        foreach (var tmp in gm.GetComponentsInChildren<TMPro.TMP_Text>(true))
+        {
+            tmp.color = !_isListening ? enabledTint : disabledTint;
+        }
+        // Tint all Images
+        foreach (var img in gm.GetComponentsInChildren<UnityEngine.SpriteRenderer>(true))
+        {
+            img.color = !_isListening ? enabledTint : disabledTint;
+        }
     }
     
     private void SetConnectionStatus(bool isActive)
